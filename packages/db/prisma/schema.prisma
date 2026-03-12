@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  analyses  Analysis[]
+  
+  @@map("users")
+}
+
+model Analysis {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  idea      String   @db.Text
+  status    AnalysisStatus @default(PENDING)
+  
+  // Agent Results
+  ideaAnalysis      Json?
+  marketResearch    Json?
+  competitorAnalysis Json?
+  mvpPlan           Json?
+  monetization      Json?
+  goToMarket        Json?
+  finalReport       Json?
+  
+  // Scoring
+  marketDemandScore      Int?
+  competitionScore       Int?
+  executionDifficultyScore Int?
+  profitPotentialScore   Int?
+  overallScore           Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("analyses")
+  @@index([userId])
+  @@index([status])
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
