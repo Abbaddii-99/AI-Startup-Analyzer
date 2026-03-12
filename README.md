@@ -12,7 +12,7 @@
 
 **AI-powered startup idea analysis platform with multi-agent system**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Demo](#-demo) • [Contributing](#-contributing)
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
@@ -128,8 +128,8 @@ AI Startup Analyzer is a comprehensive platform that uses 7 specialized AI agent
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-startup-analyzer.git
-cd ai-startup-analyzer
+git clone https://github.com/Abbaddii-99/AI-Startup-Analyzer.git
+cd AI-Startup-Analyzer
 ```
 
 2. **Install dependencies**
@@ -311,8 +311,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-- Email: your-email@example.com
+- GitHub: [@Abbaddii-99](https://github.com/Abbaddii-99)
 
 ## ⭐ Star History
 
@@ -322,7 +321,7 @@ If you find this project useful, please consider giving it a star!
 
 <div align="center">
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️**
 
 [⬆ Back to Top](#-ai-startup-analyzer)
 
