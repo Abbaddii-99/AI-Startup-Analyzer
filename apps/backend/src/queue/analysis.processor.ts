@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Injectable } from '@nestjs/common';
-import { prisma } from '@ai-analyzer/db';
+import { Injectable, Logger } from '@nestjs/common';
+import { prisma } from '../../../packages/db';
 import { IdeaAnalyzerAgent } from '../agents/idea-analyzer.agent';
 import { MarketResearchAgent } from '../agents/market-research.agent';
 import { CompetitorAnalysisAgent } from '../agents/competitor-analysis.agent';
@@ -10,9 +10,20 @@ import { MonetizationAgent } from '../agents/monetization.agent';
 import { GoToMarketAgent } from '../agents/go-to-market.agent';
 import { FinalReportAgent } from '../agents/final-report.agent';
 
+const MAX_IDEA_LENGTH = 2000;
+
+function sanitizeIdea(idea: string): string {
+  return idea
+    .trim()
+    .slice(0, MAX_IDEA_LENGTH)
+    .replace(/[<>"'`]/g, '');
+}
+
 @Injectable()
 @Processor('analysis')
 export class AnalysisProcessor extends WorkerHost {
+  private readonly logger = new Logger(AnalysisProcessor.name);
+
   constructor(
     private ideaAnalyzer: IdeaAnalyzerAgent,
     private marketResearch: MarketResearchAgent,
@@ -26,7 +37,10 @@ export class AnalysisProcessor extends WorkerHost {
   }
 
   async process(job: Job<{ analysisId: string; idea: string }>): Promise<void> {
-    const { analysisId, idea } = job.data;
+    const { analysisId } = job.data;
+    const idea = sanitizeIdea(job.data.idea);
+
+    this.logger.log(`Processing analysis ${analysisId}`);
 
     try {
       await prisma.analysis.update({
@@ -34,7 +48,6 @@ export class AnalysisProcessor extends WorkerHost {
         data: { status: 'PROCESSING' },
       });
 
-      // Run agents sequentially
       const ideaAnalysis = await this.ideaAnalyzer.execute(idea);
       await job.updateProgress(15);
 
@@ -65,18 +78,17 @@ export class AnalysisProcessor extends WorkerHost {
       const finalReportData = await this.finalReport.execute(idea, context);
       await job.updateProgress(95);
 
-      // Save to database
       await prisma.analysis.update({
         where: { id: analysisId },
         data: {
           status: 'COMPLETED',
-          ideaAnalysis,
-          marketResearch,
-          competitorAnalysis,
-          mvpPlan,
-          monetization: monetizationStrategy,
-          goToMarket: goToMarketStrategy,
-          finalReport: finalReportData,
+          ideaAnalysis: ideaAnalysis as any,
+          marketResearch: marketResearch as any,
+          competitorAnalysis: competitorAnalysis as any,
+          mvpPlan: mvpPlan as any,
+          monetization: monetizationStrategy as any,
+          goToMarket: goToMarketStrategy as any,
+          finalReport: finalReportData as any,
           marketDemandScore: finalReportData.score.marketDemand,
           competitionScore: finalReportData.score.competition,
           executionDifficultyScore: finalReportData.score.executionDifficulty,
@@ -86,7 +98,9 @@ export class AnalysisProcessor extends WorkerHost {
       });
 
       await job.updateProgress(100);
+      this.logger.log(`Analysis ${analysisId} completed successfully`);
     } catch (error) {
+      this.logger.error(`Analysis ${analysisId} failed: ${error.message}`);
       await prisma.analysis.update({
         where: { id: analysisId },
         data: { status: 'FAILED' },

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FinalReport } from '@ai-analyzer/shared';
+import { FinalReport } from '../../../packages/shared/src';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 

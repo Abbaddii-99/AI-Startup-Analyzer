@@ -5,25 +5,28 @@ import axios from 'axios';
 
 @Injectable()
 export class AIService {
-  private gemini: GoogleGenerativeAI;
-  private openRouterKey: string;
+  private gemini: GoogleGenerativeAI | null = null;
+  private openRouterKey: string | null = null;
 
   constructor(private config: ConfigService) {
-    const geminiKey = this.config.get('GEMINI_API_KEY');
-    if (geminiKey) {
+    const geminiKey = this.config.get<string>('GEMINI_API_KEY');
+    if (geminiKey && geminiKey !== 'your-gemini-api-key') {
       this.gemini = new GoogleGenerativeAI(geminiKey);
     }
-    this.openRouterKey = this.config.get('OPENROUTER_API_KEY');
+    const openRouterKey = this.config.get<string>('OPENROUTER_API_KEY');
+    if (openRouterKey && openRouterKey !== 'your-openrouter-api-key') {
+      this.openRouterKey = openRouterKey;
+    }
   }
 
   async generateWithGemini(prompt: string): Promise<string> {
-    const model = this.gemini.getGenerativeModel({ model: 'gemini-pro' });
+    const model = this.gemini!.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
   }
 
-  async generateWithOpenRouter(prompt: string, model = 'openai/gpt-4'): Promise<string> {
+  async generateWithOpenRouter(prompt: string, model = 'openai/gpt-4o-mini'): Promise<string> {
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
@@ -46,7 +49,7 @@ export class AIService {
     } else if (this.openRouterKey) {
       return this.generateWithOpenRouter(prompt);
     }
-    throw new Error('No AI service configured');
+    throw new Error('No AI service configured. Add GEMINI_API_KEY or OPENROUTER_API_KEY to .env');
   }
 
   parseJSON<T>(text: string): T {

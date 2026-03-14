@@ -2,7 +2,7 @@
   "name": "@ai-analyzer/backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "nest start --watch --preserveWatchOutput",
     "build": "nest build",
     "start": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",

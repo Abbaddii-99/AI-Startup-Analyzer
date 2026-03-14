@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MVPPlan } from '@ai-analyzer/shared';
+import { MVPPlan } from '../../../packages/shared/src';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 

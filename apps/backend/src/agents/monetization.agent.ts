@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MonetizationStrategy } from '@ai-analyzer/shared';
+import { MonetizationStrategy } from '../../../packages/shared/src';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 

@@ -9,12 +9,14 @@ import { AgentsModule } from './agents/agents.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '../../.env',
     }),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
+        password: process.env.REDIS_PASSWORD || undefined,
+        tls: process.env.REDIS_HOST?.includes('upstash') ? {} : undefined,
       },
     }),
     AuthModule,

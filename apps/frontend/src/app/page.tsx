@@ -4,31 +4,47 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles } from 'lucide-react'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const MAX_IDEA_LENGTH = 2000;
+
 export default function Home() {
   const [idea, setIdea] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!idea.trim()) return
 
+    setError('')
     setLoading(true)
+
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analysis`, {
+      if (!token) {
+        router.push('/auth/login')
+        return
+      }
+
+      const response = await fetch(`${API_URL}/analysis`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ idea }),
+        body: JSON.stringify({ idea: idea.trim().slice(0, MAX_IDEA_LENGTH) }),
       })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || 'Failed to create analysis')
+      }
 
       const data = await response.json()
       router.push(`/analysis/${data.id}`)
-    } catch (error) {
-      console.error('Error:', error)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -52,10 +68,18 @@ export default function Home() {
             value={idea}
             onChange={(e) => setIdea(e.target.value)}
             placeholder="Describe your startup idea..."
+            maxLength={MAX_IDEA_LENGTH}
             className="w-full h-40 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           />
-          
+          <p className="text-xs text-gray-400 text-right">{idea.length}/{MAX_IDEA_LENGTH}</p>
+
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading || !idea.trim()}

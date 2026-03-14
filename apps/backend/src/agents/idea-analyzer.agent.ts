@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IdeaAnalysis } from '@ai-analyzer/shared';
+import { IdeaAnalysis } from '../../../packages/shared/src';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
