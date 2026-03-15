@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Sparkles, UserPlus } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 
-const API_URL = 'http://localhost:4000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
