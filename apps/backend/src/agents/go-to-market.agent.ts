@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GoToMarketStrategy } from '../../../packages/shared/src';
+import { GoToMarketStrategy, wrapUserInput } from '@ai-analyzer/shared';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
@@ -8,12 +8,12 @@ export class GoToMarketAgent implements Agent<GoToMarketStrategy> {
   constructor(private ai: AIService) {}
 
   async execute(idea: string): Promise<GoToMarketStrategy> {
-    const prompt = `You are a startup growth strategist.
+    const prompt = `You are a startup growth strategist. Respond in the same language as the startup idea.
 
 Explain how to launch this startup and get the first 100 users.
 
 Idea:
-${idea}
+${wrapUserInput(idea)}
 
 Include:
 

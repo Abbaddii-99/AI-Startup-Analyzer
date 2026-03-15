@@ -12,6 +12,8 @@ FROM base AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Enable standalone output inside Docker (Linux supports symlinks)
+ENV NEXT_OUTPUT=standalone
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/packages ./packages
@@ -22,14 +24,12 @@ FROM base AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=build /app/apps/frontend/.next ./apps/frontend/.next
+COPY --from=build /app/apps/frontend/.next/standalone ./
+COPY --from=build /app/apps/frontend/.next/static ./apps/frontend/.next/static
 COPY --from=build /app/apps/frontend/public ./apps/frontend/public
-COPY --from=build /app/apps/frontend/package.json ./apps/frontend/
-COPY --from=build /app/apps/frontend/next.config.js ./apps/frontend/
-COPY --from=dependencies /app/node_modules ./node_modules
 
 WORKDIR /app/apps/frontend
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["node", "server.js"]

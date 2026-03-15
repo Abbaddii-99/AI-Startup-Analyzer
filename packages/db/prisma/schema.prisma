@@ -14,42 +14,65 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  analyses  Analysis[]
-  
+
+  // Subscription
+  plan            Plan     @default(FREE)
+  stripeCustomerId String?  @unique
+  stripeSubId      String?  @unique
+  analysesThisMonth Int     @default(0)
+  monthResetAt    DateTime @default(now())
+
+  analyses      Analysis[]
+  refreshTokens RefreshToken[]
+
   @@map("users")
 }
 
-model Analysis {
+model RefreshToken {
   id        String   @id @default(cuid())
+  token     String   @unique
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  idea      String   @db.Text
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+  @@index([userId])
+}
+
+model Analysis {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea      String         @db.Text
   status    AnalysisStatus @default(PENDING)
-  
+  isPublic  Boolean        @default(false)
+  version   Int            @default(1)
+  parentId  String?
+
   // Agent Results
-  ideaAnalysis      Json?
-  marketResearch    Json?
+  ideaAnalysis       Json?
+  marketResearch     Json?
   competitorAnalysis Json?
-  mvpPlan           Json?
-  monetization      Json?
-  goToMarket        Json?
-  finalReport       Json?
-  
+  mvpPlan            Json?
+  monetization       Json?
+  goToMarket         Json?
+  finalReport        Json?
+
   // Scoring
-  marketDemandScore      Int?
-  competitionScore       Int?
-  executionDifficultyScore Int?
-  profitPotentialScore   Int?
-  overallScore           Float?
-  
+  marketDemandScore        Float?
+  competitionScore         Float?
+  executionDifficultyScore Float?
+  profitPotentialScore     Float?
+  overallScore             Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("analyses")
   @@index([userId])
   @@index([status])
+  @@index([isPublic])
 }
 
 enum AnalysisStatus {
@@ -57,4 +80,10 @@ enum AnalysisStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
 }

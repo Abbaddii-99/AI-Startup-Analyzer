@@ -76,17 +76,17 @@ pnpm dev
 ## 🎯 Features to Add Next
 
 ### High Priority
-- [ ] User dashboard with analysis history
-- [ ] Export report as PDF
+- [x] User dashboard with analysis history
+- [x] Export report as PDF
 - [ ] Email notifications when analysis complete
-- [ ] Rate limiting per user
-- [ ] Error handling improvements
+- [x] Rate limiting per user
+- [x] Error handling improvements
 
 ### Medium Priority
 - [ ] WebSocket for real-time updates
 - [ ] Analysis comparison feature
 - [ ] Save favorite analyses
-- [ ] Share analysis via link
+- [x] Share analysis via link
 - [ ] Dark mode toggle
 
 ### Low Priority
@@ -161,9 +161,9 @@ pnpm build
 - [x] Password hashing (bcrypt)
 - [x] Environment variables
 - [x] CORS configuration
-- [ ] Rate limiting (add next)
-- [ ] Input sanitization (add next)
-- [ ] SQL injection protection (Prisma handles)
+- [x] Rate limiting (ThrottlerModule)
+- [x] Input sanitization
+- [x] SQL injection protection (Prisma handles)
 
 ## 📦 Tech Stack Summary
 

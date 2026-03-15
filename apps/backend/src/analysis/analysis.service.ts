@@ -1,29 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { prisma } from '../../../packages/db';
+import { prisma } from '../prisma';
 
 @Injectable()
 export class AnalysisService {
-  constructor(@InjectQueue('analysis') private analysisQueue: Queue) {}
+  constructor(
+    @InjectQueue('analysis') private analysisQueue: Queue,
+  ) {}
 
   async createAnalysis(userId: string, idea: string): Promise<any> {
-    const analysis = await prisma.analysis.create({
-      data: { userId, idea, status: 'PENDING' },
-    });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
 
-    await this.analysisQueue.add('analyze', {
-      analysisId: analysis.id,
-      idea,
-    });
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    let count = user.analysesThisMonth;
 
+    if (user.monthResetAt < monthStart) {
+      await prisma.user.update({ where: { id: userId }, data: { analysesThisMonth: 0, monthResetAt: now } });
+      count = 0;
+    }
+
+    const limits: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
+    const limit = limits[user.plan] ?? 3;
+    if (count >= limit) {
+      throw new ConflictException(`Monthly limit reached (${limit} for ${user.plan} plan).`);
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { analysesThisMonth: { increment: 1 } } });
+    const analysis = await prisma.analysis.create({ data: { userId, idea, status: 'PENDING' } });
+
+    await this.analysisQueue.add('analyze', { analysisId: analysis.id, idea }, { jobId: analysis.id });
     return analysis;
   }
 
   async getAnalysis(id: string, userId: string): Promise<any> {
-    return prisma.analysis.findFirst({
-      where: { id, userId },
-    });
+    return prisma.analysis.findFirst({ where: { id, userId } });
   }
 
   async getUserAnalyses(userId: string): Promise<any[]> {
@@ -37,12 +50,17 @@ export class AnalysisService {
     const analysis = await this.getAnalysis(id, userId);
     if (!analysis) return null;
 
-    const jobs = await this.analysisQueue.getJobs(['active', 'waiting']);
-    const job = jobs.find((j) => j.data.analysisId === id);
+    const job = await this.analysisQueue.getJob(id);
+    return { status: analysis.status, progress: job ? job.progress : 0 };
+  }
 
-    return {
-      status: analysis.status,
-      progress: job ? job.progress : 0,
-    };
+  async getUserPlanInfo(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true, analysesThisMonth: true, monthResetAt: true },
+    });
+    const limits: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
+    const limit = limits[user?.plan ?? 'FREE'];
+    return { plan: user?.plan, used: user?.analysesThisMonth, limit };
   }
 }

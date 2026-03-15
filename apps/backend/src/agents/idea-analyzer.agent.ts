@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IdeaAnalysis } from '../../../packages/shared/src';
+import { IdeaAnalysis, wrapUserInput } from '@ai-analyzer/shared';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
@@ -8,7 +8,7 @@ export class IdeaAnalyzerAgent implements Agent<IdeaAnalysis> {
   constructor(private ai: AIService) {}
 
   async execute(idea: string): Promise<IdeaAnalysis> {
-    const prompt = `You are a startup idea analyst.
+    const prompt = `You are a startup idea analyst. Respond in the same language as the startup idea.
 
 Analyze the following startup idea and extract:
 
@@ -19,7 +19,7 @@ Analyze the following startup idea and extract:
 5. possible use cases
 
 Startup idea:
-${idea}
+${wrapUserInput(idea)}
 
 Return structured output in JSON format:
 {

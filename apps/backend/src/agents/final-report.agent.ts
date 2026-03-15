@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FinalReport } from '../../../packages/shared/src';
+import { FinalReport, wrapUserInput } from '@ai-analyzer/shared';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
@@ -8,7 +8,7 @@ export class FinalReportAgent implements Agent<FinalReport> {
   constructor(private ai: AIService) {}
 
   async execute(idea: string, context: any): Promise<FinalReport> {
-    const prompt = `You are a venture capital startup analyst.
+    const prompt = `You are a venture capital startup analyst. Respond in the same language as the startup idea.
 
 Combine the following analyses into a professional startup report.
 
@@ -28,7 +28,7 @@ Sections:
 
 Data:
 
-Idea: ${idea}
+Idea: ${wrapUserInput(idea)}
 
 Idea Analysis: ${JSON.stringify(context.ideaAnalysis)}
 

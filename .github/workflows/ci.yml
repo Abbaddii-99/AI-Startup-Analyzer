@@ -59,7 +59,7 @@ jobs:
           DATABASE_URL: postgresql://user:password@localhost:5432/ai_analyzer_test
 
       - name: Run migrations
-        run: pnpm db:migrate
+        run: pnpm --filter @ai-analyzer/db exec prisma migrate deploy
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/ai_analyzer_test
 

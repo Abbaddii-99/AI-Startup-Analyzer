@@ -7,9 +7,7 @@ import { AgentsModule } from '../agents/agents.module';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: 'analysis',
-    }),
+    BullModule.registerQueue({ name: 'analysis' }),
     AgentsModule,
   ],
   controllers: [AnalysisController],
