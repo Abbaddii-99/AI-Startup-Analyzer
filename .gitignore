@@ -25,6 +25,27 @@ yarn-error.log*
 # Local env files
 .env
 .env*.local
+packages/db/.env
+
+# Sensitive files
+reset-limit.sql
+*.log
+
+# Build cache
+*.tsbuildinfo
+
+# Local dev scripts (not needed in repo)
+start-backend.bat
+start-frontend.bat
+check-before-upload.bat
+git-setup.bat
+git-setup.sh
+clean-project.bat
+
+# Internal dev docs
+WHAT_GETS_UPLOADED.md
+SIMPLE_UPLOAD_GUIDE.md
+GITHUB_SETUP_CHECKLIST.md
 
 # Vercel
 .vercel

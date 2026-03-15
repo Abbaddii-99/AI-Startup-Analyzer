@@ -27,7 +27,7 @@ sleep 10
 
 echo "🗄️ Running database migrations..."
 pnpm db:generate
-pnpm db:migrate
+pnpm --filter @ai-analyzer/db exec dotenv -e ../../.env -- prisma migrate deploy
 
 echo "✅ Setup complete!"
 echo ""

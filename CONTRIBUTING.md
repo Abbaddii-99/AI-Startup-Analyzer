@@ -22,7 +22,7 @@ pnpm install
 docker-compose up -d
 
 # Run migrations
-pnpm db:migrate
+pnpm --filter @ai-analyzer/db exec dotenv -e ../../.env -- prisma migrate deploy
 
 # Start dev servers
 pnpm dev

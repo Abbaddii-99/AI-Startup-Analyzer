@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MonetizationStrategy } from '../../../packages/shared/src';
+import { MonetizationStrategy, wrapUserInput } from '@ai-analyzer/shared';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
@@ -8,11 +8,11 @@ export class MonetizationAgent implements Agent<MonetizationStrategy> {
   constructor(private ai: AIService) {}
 
   async execute(idea: string): Promise<MonetizationStrategy> {
-    const prompt = `You are a SaaS monetization strategist.
+    const prompt = `You are a SaaS monetization strategist. Respond in the same language as the startup idea.
 
 For this startup idea:
 
-${idea}
+${wrapUserInput(idea)}
 
 Suggest revenue models:
 

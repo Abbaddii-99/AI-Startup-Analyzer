@@ -25,7 +25,7 @@ timeout /t 10 /nobreak >nul
 
 echo 🗄️ Running database migrations...
 call pnpm db:generate
-call pnpm db:migrate
+call pnpm --filter @ai-analyzer/db exec dotenv -e ../../.env -- prisma migrate deploy
 
 echo ✅ Setup complete!
 echo.

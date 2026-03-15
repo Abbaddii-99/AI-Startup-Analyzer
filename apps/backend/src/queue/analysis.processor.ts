@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import { prisma } from '../../../packages/db';
+import { prisma } from '../prisma';
 import { IdeaAnalyzerAgent } from '../agents/idea-analyzer.agent';
 import { MarketResearchAgent } from '../agents/market-research.agent';
 import { CompetitorAnalysisAgent } from '../agents/competitor-analysis.agent';
@@ -10,13 +10,14 @@ import { MonetizationAgent } from '../agents/monetization.agent';
 import { GoToMarketAgent } from '../agents/go-to-market.agent';
 import { FinalReportAgent } from '../agents/final-report.agent';
 
-const MAX_IDEA_LENGTH = 2000;
-
 function sanitizeIdea(idea: string): string {
   return idea
     .trim()
-    .slice(0, MAX_IDEA_LENGTH)
-    .replace(/[<>"'`]/g, '');
+    .slice(0, 2000)
+    .replace(/[<>"'`]/g, '')
+    .replace(/ignore\s+(previous|above|all)\s+instructions?/gi, '')
+    .replace(/system\s*:/gi, '')
+    .replace(/\\n|\\r/g, ' ');
 }
 
 @Injectable()
@@ -36,58 +37,35 @@ export class AnalysisProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<{ analysisId: string; idea: string }>): Promise<void> {
-    const { analysisId } = job.data;
-    const idea = sanitizeIdea(job.data.idea);
+  async process(job: Job): Promise<void> {
+    const analysisId = String(job.data?.analysisId ?? '');
+    const idea = sanitizeIdea(String(job.data?.idea ?? ''));
+
+    if (!analysisId) throw new Error('Invalid analysisId');
+    if (!idea) throw new Error('Idea is empty');
 
     this.logger.log(`Processing analysis ${analysisId}`);
 
     try {
-      await prisma.analysis.update({
-        where: { id: analysisId },
-        data: { status: 'PROCESSING' },
-      });
+      await prisma.analysis.update({ where: { id: analysisId }, data: { status: 'PROCESSING' } });
+      await job.updateProgress(5);
 
-      const ideaAnalysis = await this.ideaAnalyzer.execute(idea);
-      await job.updateProgress(15);
+      const agentResults = await this.runAgentsWithProgress(job, idea);
+      await job.updateProgress(90);
 
-      const marketResearch = await this.marketResearch.execute(idea);
-      await job.updateProgress(30);
-
-      const competitorAnalysis = await this.competitorAnalysis.execute(idea);
-      await job.updateProgress(45);
-
-      const mvpPlan = await this.mvpGenerator.execute(idea);
-      await job.updateProgress(60);
-
-      const monetizationStrategy = await this.monetization.execute(idea);
-      await job.updateProgress(75);
-
-      const goToMarketStrategy = await this.goToMarket.execute(idea);
-      await job.updateProgress(85);
-
-      const context = {
-        ideaAnalysis,
-        marketResearch,
-        competitorAnalysis,
-        mvpPlan,
-        monetization: monetizationStrategy,
-        goToMarket: goToMarketStrategy,
-      };
-
-      const finalReportData = await this.finalReport.execute(idea, context);
-      await job.updateProgress(95);
+      const finalReportData = await this.finalReport.execute(idea, agentResults);
+      await job.updateProgress(98);
 
       await prisma.analysis.update({
         where: { id: analysisId },
         data: {
           status: 'COMPLETED',
-          ideaAnalysis: ideaAnalysis as any,
-          marketResearch: marketResearch as any,
-          competitorAnalysis: competitorAnalysis as any,
-          mvpPlan: mvpPlan as any,
-          monetization: monetizationStrategy as any,
-          goToMarket: goToMarketStrategy as any,
+          ideaAnalysis: agentResults.ideaAnalysis as any,
+          marketResearch: agentResults.marketResearch as any,
+          competitorAnalysis: agentResults.competitorAnalysis as any,
+          mvpPlan: agentResults.mvpPlan as any,
+          monetization: agentResults.monetization as any,
+          goToMarket: agentResults.goToMarket as any,
           finalReport: finalReportData as any,
           marketDemandScore: finalReportData.score.marketDemand,
           competitionScore: finalReportData.score.competition,
@@ -100,12 +78,36 @@ export class AnalysisProcessor extends WorkerHost {
       await job.updateProgress(100);
       this.logger.log(`Analysis ${analysisId} completed successfully`);
     } catch (error) {
-      this.logger.error(`Analysis ${analysisId} failed: ${error.message}`);
-      await prisma.analysis.update({
-        where: { id: analysisId },
-        data: { status: 'FAILED' },
-      });
+      const safeMessage = String(error.message ?? error).replace(/[\r\n]/g, ' ').slice(0, 200);
+      this.logger.error(`Analysis ${analysisId} failed: ${safeMessage}`);
+      await prisma.analysis.update({ where: { id: analysisId }, data: { status: 'FAILED' } });
       throw error;
     }
+  }
+
+  private async runAgentsWithProgress(job: Job, idea: string) {
+    const steps = [
+      { name: 'ideaAnalysis',       fn: () => this.ideaAnalyzer.execute(idea),        progress: 19 },
+      { name: 'marketResearch',     fn: () => this.marketResearch.execute(idea),       progress: 33 },
+      { name: 'competitorAnalysis', fn: () => this.competitorAnalysis.execute(idea),   progress: 47 },
+      { name: 'mvpPlan',            fn: () => this.mvpGenerator.execute(idea),         progress: 61 },
+      { name: 'monetization',       fn: () => this.monetization.execute(idea),         progress: 75 },
+      { name: 'goToMarket',         fn: () => this.goToMarket.execute(idea),           progress: 89 },
+    ];
+
+    const results: Record<string, any> = {};
+    for (const { name, fn, progress } of steps) {
+      results[name] = await fn();
+      await job.updateProgress(progress);
+    }
+
+    return results as {
+      ideaAnalysis: any;
+      marketResearch: any;
+      competitorAnalysis: any;
+      mvpPlan: any;
+      monetization: any;
+      goToMarket: any;
+    };
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CompetitorAnalysis } from '../../../packages/shared/src';
+import { CompetitorAnalysis, wrapUserInput } from '@ai-analyzer/shared';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
@@ -8,11 +8,11 @@ export class CompetitorAnalysisAgent implements Agent<CompetitorAnalysis> {
   constructor(private ai: AIService) {}
 
   async execute(idea: string): Promise<CompetitorAnalysis> {
-    const prompt = `You are a startup competitor analyst.
+    const prompt = `You are a startup competitor analyst. Respond in the same language as the startup idea.
 
 Analyze the competitors for this startup idea:
 
-${idea}
+${wrapUserInput(idea)}
 
 Return:
 

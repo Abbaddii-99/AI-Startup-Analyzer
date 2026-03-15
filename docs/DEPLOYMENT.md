@@ -53,7 +53,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 3. **Run migrations**
 ```bash
-docker-compose -f docker-compose.prod.yml exec backend pnpm db:migrate
+docker-compose -f docker-compose.prod.yml exec backend npx prisma migrate deploy
 ```
 
 ### Option 2: Separate Containers

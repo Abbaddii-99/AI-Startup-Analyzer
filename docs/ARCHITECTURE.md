@@ -139,11 +139,13 @@ Output: Comprehensive Report + Score
 
 ## Future Enhancements
 
-- [ ] WebSocket for real-time updates
-- [ ] PDF export for reports
+- [ ] WebSocket for real-time updates (currently polling)
+- [x] PDF export for reports
 - [ ] Team collaboration features
-- [ ] Payment integration
+- [ ] Payment integration (Stripe ready)
 - [ ] Advanced analytics dashboard
-- [ ] Multiple AI model support
-- [ ] Caching layer for common queries
-- [ ] Rate limiting per user
+- [ ] Multiple AI model selection
+- [x] Caching layer (Redis)
+- [x] Rate limiting per user
+- [x] Refresh token rotation
+- [x] Plan-based usage limits
