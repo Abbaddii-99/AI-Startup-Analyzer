@@ -12,6 +12,7 @@ import BusinessModel from '@/components/BusinessModel'
 import CompetitorCards from '@/components/CompetitorCards'
 import TargetAudienceCards from '@/components/TargetAudienceCards'
 import MarketSizeVisual from '@/components/MarketSizeVisual'
+import VisionMission from '@/components/VisionMission'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -288,6 +289,13 @@ export default function AnalysisPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Vision & Mission */}
+        {analysis.visionMission && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <VisionMission data={analysis.visionMission} />
+          </div>
+        )}
 
         {/* Report Sections */}
         <div className="grid md:grid-cols-2 gap-4">

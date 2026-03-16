@@ -5,149 +5,165 @@
 
 ---
 
-## المميزات المطلوب إضافتها
+## ✅ المميزات المكتملة
+
+| الميزة | الملفات |
+|--------|---------|
+| Risk Matrix (مصفوفة المخاطر) | `risk-radar.agent.ts` + `RiskRadar.tsx` |
+| Project Roadmap (إنجازات اللاعب الأفضل) | `roadmap.agent.ts` + `Roadmap.tsx` |
+| Business Model Matching (43 نموذج) | `business-model.agent.ts` + `BusinessModel.tsx` |
+| Target Audience Cards | `idea-analyzer.agent.ts` + `TargetAudienceCards.tsx` |
+| Competitor Cards | `competitor-analysis.agent.ts` + `CompetitorCards.tsx` |
+| TAM/SAM/SOM Visual | `market-research.agent.ts` + `MarketSizeVisual.tsx` |
 
 ---
 
-### 1. 🎯 Risk Matrix (مصفوفة المخاطر)
-**الأولوية**: عالية | **الصعوبة**: سهلة
+## 🔄 المميزات المطلوب إضافتها
 
-**الوصف**: جدول بصري 4×4 يصنف المخاطر حسب (الاحتمالية × التأثير)
-- محاور: قليل / متوسط / عالي / شديد الأهمية
-- الألوان: أخضر → أصفر → برتقالي → أحمر
-- كل خطر له رقم وعنوان
+---
+
+### 1. 🗂️ Sidebar Navigation ← **الأولوية الأولى**
+**الصعوبة**: صعبة | **الأثر**: يغير شكل التطبيق كله
+
+**الوصف** (من الصورة):
+- Sidebar ثابت على اليسار عرض ~220px
+- Header: اسم المشروع (من الفكرة) + أيقونة
+- أقسام رئيسية:
+  - 📋 **ملخص** - الصفحة الرئيسية (Summary)
+  - 🔍 **تحليل** - مع sub-items قابلة للطي:
+    - Customers (Target Audience)
+    - Competition (Competitor Cards)
+    - Market Potential (TAM/SAM/SOM)
+    - Business Model
+    - MVP
+    - Risk Assessment
+    - Financial Plan (PRO - locked)
+  - 🎨 **ماركة** - Brand Identity (جديد)
+  - 📋 **خطة العمل** - Business Plan
+  - 💰 **بجفذ** - Budget Estimator (جديد)
+  - ➕ **أكثر**
+- Active state واضح على الـ item المحدد
+- Collapse/expand للـ sub-items
+- زر "جميع الأفكار" في الأعلى للرجوع للـ dashboard
+- User info في الأسفل (email + plan badge)
 
 **التنفيذ**:
-- Backend: agent جديد `RiskAssessmentAgent` يولد قائمة مخاطر مع (probability, impact, title)
-- Frontend: component `RiskMatrix` يعرض الـ grid بالألوان
-- Schema: إضافة `riskAssessment` field في Analysis
+- إنشاء `Sidebar.tsx` component
+- إعادة هيكلة `analysis/[id]/page.tsx` لـ layout مع sidebar
+- كل section يصبح component منفصل
+- الـ main content area تعرض الـ section المحدد
+
+**الملفات المتأثرة**:
+- `apps/frontend/src/components/Sidebar.tsx` ← جديد
+- `apps/frontend/src/app/analysis/[id]/page.tsx` ← إعادة هيكلة كاملة
+- `apps/frontend/src/components/SummarySection.tsx` ← جديد
+- `apps/frontend/src/components/AnalysisSection.tsx` ← جديد
 
 ---
 
-### 2. 📅 Project Roadmap (خطة المراحل)
-**الأولوية**: عالية | **الصعوبة**: سهلة
+### 2. 🎯 Vision & Mission Cards ← **الأولوية الثانية**
+**الصعوبة**: سهلة | **الأثر**: بصري كبير
 
-**الوصف**: 4 مراحل زمنية لتنفيذ المشروع
-- كل مرحلة: عنوان + وصف + مدة زمنية (بالأسابيع)
-- مرحلة 1: البحث والتخطيط
-- مرحلة 2: تطوير النموذج الأولي
-- مرحلة 3: تحضير الإطلاق
-- مرحلة 4: التقييم وما بعد الإطلاق
+**الوصف** (من الصورة):
+- Card للـ Vision: عنوان + نص
+- Card للـ Mission: عنوان + نص
+- يظهران في صفحة الملخص تحت "الفكرة"
 
 **التنفيذ**:
-- Backend: يضاف للـ `FinalReportAgent` أو agent منفصل
-- Frontend: component `Roadmap` بـ timeline بصري
-- Schema: إضافة `roadmap` field في Analysis
+- Backend: تحديث `final-report.agent.ts` يضيف `vision` و `mission` للـ output
+- Frontend: إضافة Vision & Mission cards في الـ Summary section
+
+**الملفات المتأثرة**:
+- `apps/backend/src/agents/final-report.agent.ts` ← إضافة vision/mission
+- `apps/frontend/src/components/SummarySection.tsx` ← إضافة cards
 
 ---
 
-### 3. 💼 Business Model Matching
-**الأولوية**: عالية | **الصعوبة**: متوسطة
+### 3. 🎨 Brand Identity Agent ← **الأولوية الثالثة**
+**الصعوبة**: متوسطة | **الأثر**: section جديد كامل
 
-**الوصف**: "فكرتك تتوافق مع X من أصل 43 نموذجاً تجارياً"
-- قائمة بأبرز النماذج المتوافقة مع شرح مختصر
-- مثال: SaaS، Marketplace، Freemium، Enterprise...
+**الوصف** (من الصورة - قسم "ماركة"):
+- اقتراح اسم للمشروع
+- tagline / slogan
+- brand colors (3-4 ألوان مع hex codes)
+- tone of voice
+- brand personality
+- logo concept (وصف نصي)
 
 **التنفيذ**:
-- Backend: تحديث `MonetizationAgent` يرجع matched models + total count
-- Frontend: عداد بصري كبير + cards للنماذج المتوافقة
-- Schema: إضافة `businessModelCount` و `matchedModels` في Analysis
+- Backend: agent جديد `brand-identity.agent.ts`
+- Schema: إضافة `brandIdentity Json?` في Analysis
+- Processor: إضافة BrandIdentityAgent في pipeline
+- Frontend: component `BrandIdentity.tsx`
+
+**الملفات المتأثرة**:
+- `apps/backend/src/agents/brand-identity.agent.ts` ← جديد
+- `apps/backend/src/agents/agents.module.ts` ← تسجيل
+- `apps/backend/src/queue/analysis.processor.ts` ← إضافة للـ pipeline
+- `packages/db/prisma/schema.prisma` ← إضافة field
+- `apps/frontend/src/components/BrandIdentity.tsx` ← جديد
 
 ---
 
-### 4. 👥 Target Audience Cards
-**الأولوية**: متوسطة | **الصعوبة**: سهلة
+### 4. 💰 Budget Estimator ← **الأولوية الرابعة**
+**الصعوبة**: متوسطة | **الأثر**: section جديد
 
-**الوصف**: بدل النص العادي، cards بصرية لكل شريحة مستهدفة
-- اسم الشريحة + وصف مختصر
-- مستوى صعوبة الوصول: سهل / متوسط / صعب (badge ملون)
-
-**التنفيذ**:
-- Backend: تحديث `IdeaAnalyzerAgent` يرجع targetAudience كـ array of objects
-- Frontend: تحديث عرض الـ targetUsers بـ cards
-
----
-
-### 5. 🏆 Competitor Cards (بصري)
-**الأولوية**: متوسطة | **الصعوبة**: سهلة
-
-**الوصف**: بدل النص، cards بصرية للمنافسين
-- اسم المنافس + وصف مختصر
-- placeholder logo (أول حرف من الاسم)
-- strengths و weaknesses
-
-**التنفيذ**:
-- Backend: البيانات موجودة بالفعل في `CompetitorAnalysisAgent`
-- Frontend: تحديث عرض المنافسين بـ cards بصرية فقط
-
----
-
-### 6. 📊 TAM/SAM/SOM Visual (Venn Diagram)
-**الأولوية**: متوسطة | **الصعوبة**: متوسطة
-
-**الوصف**: بدل النص، دوائر متداخلة بصرية
-- TAM (السوق الكلي) - دائرة كبيرة
-- SAM (السوق المستهدف) - دائرة متوسطة
-- SOM (الحصة المتوقعة) - دائرة صغيرة
-- كل دائرة فيها القيمة المالية
-
-**التنفيذ**:
-- Backend: تحديث `MarketResearchAgent` يرجع أرقام TAM/SAM/SOM
-- Frontend: SVG component أو recharts للـ Venn diagram
-
----
-
-### 7. 💰 Financial Plan (PRO Feature)
-**الأولوية**: منخفضة | **الصعوبة**: صعبة
-
-**الوصف**: خطة تمويل مفصلة (Premium فقط)
-- احتياجات التمويل
-- توقعات نقطة التعادل
+**الوصف** (من الصورة - قسم "بجفذ"):
+- تقدير الميزانية المطلوبة للإطلاق
+- تقسيم: Development / Marketing / Operations / Legal
+- نقطة التعادل (Break-even)
 - توقعات الإيرادات (سنة 1، 2، 3)
-- نموذج مالي مبسط
 
 **التنفيذ**:
-- Backend: agent جديد `FinancialPlanAgent` (PRO plan فقط)
-- Frontend: locked section مع upgrade prompt للـ FREE users
-- Stripe: ربط بـ PRO subscription
+- Backend: agent جديد `budget-estimator.agent.ts`
+- Schema: إضافة `budgetEstimate Json?` في Analysis
+- Frontend: component `BudgetEstimator.tsx`
+
+**الملفات المتأثرة**:
+- `apps/backend/src/agents/budget-estimator.agent.ts` ← جديد
+- `apps/backend/src/agents/agents.module.ts` ← تسجيل
+- `apps/backend/src/queue/analysis.processor.ts` ← إضافة للـ pipeline
+- `packages/db/prisma/schema.prisma` ← إضافة field
+- `apps/frontend/src/components/BudgetEstimator.tsx` ← جديد
 
 ---
 
-### 8. 🗂️ Sidebar Navigation (تبويبات)
-**الأولوية**: منخفضة | **الصعوبة**: صعبة
+### 5. 🏷️ Analysis Type Badge
+**الصعوبة**: سهلة جداً | **الأثر**: بصري صغير
 
-**الوصف**: بدل صفحة واحدة طويلة، sidebar مع تبويبات
-- ملخص / تحليل / ماركة / خطة العمل / بجفذ
-- تحت "تحليل": Customers, Competition, Market, Business Model, MVP, Risk, Financial
+**الوصف**: badge في الـ header يقول "الذكاء الاصطناعي القياسي" أو نوع التحليل
 
-**التنفيذ**:
-- Frontend: إعادة هيكلة صفحة `analysis/[id]/page.tsx` بالكامل
-- إضافة sidebar component مع active state
+**التنفيذ**: Frontend فقط - إضافة badge في الـ header
 
 ---
 
-## ترتيب التنفيذ المقترح
+## ترتيب التنفيذ
 
-| # | الميزة | الأولوية | الصعوبة | الوقت المتوقع |
-|---|--------|----------|---------|---------------|
-| 1 | Risk Matrix | 🔴 عالية | ⭐ سهلة | يوم |
-| 2 | Project Roadmap | 🔴 عالية | ⭐ سهلة | يوم |
-| 3 | Business Model Matching | 🔴 عالية | ⭐⭐ متوسطة | يوم |
-| 4 | Competitor Cards | 🟡 متوسطة | ⭐ سهلة | نص يوم |
-| 5 | Target Audience Cards | 🟡 متوسطة | ⭐ سهلة | نص يوم |
-| 6 | TAM/SAM/SOM Visual | 🟡 متوسطة | ⭐⭐ متوسطة | يوم |
-| 7 | Financial Plan | 🟢 منخفضة | ⭐⭐⭐ صعبة | 3 أيام |
-| 8 | Sidebar Navigation | 🟢 منخفضة | ⭐⭐⭐ صعبة | يومين |
+| # | الميزة | الأولوية | الصعوبة | الحالة |
+|---|--------|----------|---------|--------|
+| 1 | Sidebar Navigation | 🔴 عالية | ⭐⭐⭐ صعبة | ⏳ جاري |
+| 2 | Vision & Mission Cards | 🔴 عالية | ⭐ سهلة | ⏳ لم يبدأ |
+| 3 | Brand Identity Agent | 🟡 متوسطة | ⭐⭐ متوسطة | ⏳ لم يبدأ |
+| 4 | Budget Estimator | 🟡 متوسطة | ⭐⭐ متوسطة | ⏳ لم يبدأ |
+| 5 | Analysis Type Badge | 🟢 منخفضة | ⭐ سهلة | ⏳ لم يبدأ |
 
 ---
 
-## الملفات المتأثرة لكل ميزة
+## الملفات المتأثرة الإجمالية
 
 ### Backend
-- `apps/backend/src/agents/` ← agents جديدة أو تحديث
-- `packages/db/prisma/schema.prisma` ← fields جديدة
-- `apps/backend/src/queue/analysis.processor.ts` ← إضافة agents جديدة
+- `apps/backend/src/agents/final-report.agent.ts` ← تحديث (vision/mission)
+- `apps/backend/src/agents/brand-identity.agent.ts` ← جديد
+- `apps/backend/src/agents/budget-estimator.agent.ts` ← جديد
+- `apps/backend/src/agents/agents.module.ts` ← تحديث
+- `apps/backend/src/queue/analysis.processor.ts` ← تحديث
+
+### Database
+- `packages/db/prisma/schema.prisma` ← إضافة `brandIdentity` و `budgetEstimate`
 
 ### Frontend
-- `apps/frontend/src/app/analysis/[id]/page.tsx` ← إضافة components
-- `apps/frontend/src/components/` ← components جديدة
+- `apps/frontend/src/components/Sidebar.tsx` ← جديد
+- `apps/frontend/src/components/SummarySection.tsx` ← جديد
+- `apps/frontend/src/components/BrandIdentity.tsx` ← جديد
+- `apps/frontend/src/components/BudgetEstimator.tsx` ← جديد
+- `apps/frontend/src/app/analysis/[id]/page.tsx` ← إعادة هيكلة كاملة

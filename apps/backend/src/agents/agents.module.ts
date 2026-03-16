@@ -10,6 +10,7 @@ import { FinalReportAgent } from './final-report.agent';
 import { RiskRadarAgent } from './risk-radar.agent';
 import { RoadmapAgent } from './roadmap.agent';
 import { BusinessModelAgent } from './business-model.agent';
+import { VisionMissionAgent } from './vision-mission.agent';
 
 @Module({
   providers: [
@@ -24,6 +25,7 @@ import { BusinessModelAgent } from './business-model.agent';
     RiskRadarAgent,
     RoadmapAgent,
     BusinessModelAgent,
+    VisionMissionAgent,
   ],
   exports: [
     AIService,
@@ -37,6 +39,7 @@ import { BusinessModelAgent } from './business-model.agent';
     RiskRadarAgent,
     RoadmapAgent,
     BusinessModelAgent,
+    VisionMissionAgent,
   ],
 })
 export class AgentsModule {}
