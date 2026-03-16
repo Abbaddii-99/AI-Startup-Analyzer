@@ -60,6 +60,7 @@ model Analysis {
   finalReport        Json?
   riskRadar          Json?
   roadmap            Json?
+  businessModel      Json?
 
   // Scoring
   marketDemandScore        Float?

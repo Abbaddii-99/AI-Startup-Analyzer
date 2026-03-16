@@ -8,6 +8,7 @@ import { Navbar } from '@/components/Navbar'
 import { ScoreCard, scoreColor, scoreBg } from '@/components/ScoreCard'
 import RiskRadar from '@/components/RiskRadar'
 import Roadmap from '@/components/Roadmap'
+import BusinessModel from '@/components/BusinessModel'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -335,6 +336,13 @@ export default function AnalysisPage() {
         {analysis.roadmap && (
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <Roadmap data={analysis.roadmap} />
+          </div>
+        )}
+
+        {/* Business Model */}
+        {analysis.businessModel && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <BusinessModel data={analysis.businessModel} />
           </div>
         )}
 
