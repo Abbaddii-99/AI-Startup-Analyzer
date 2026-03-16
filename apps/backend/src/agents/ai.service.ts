@@ -101,28 +101,49 @@ export class AIService {
   }
 
   parseJSON<T>(text: string): T {
-    // Try ```json ... ``` block first
+    const attempts: string[] = [];
+
+    // 1. Try ```json ... ``` block
     const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) {
-      try {
-        return JSON.parse(fenceMatch[1].trim());
-      } catch { /* fall through */ }
-    }
+    if (fenceMatch) attempts.push(fenceMatch[1].trim());
 
-    // Try extracting first { ... } or [ ... ] block
+    // 2. Try first { ... } or [ ... ] block
     const objectMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-    if (objectMatch) {
+    if (objectMatch) attempts.push(objectMatch[1]);
+
+    // 3. Whole text
+    attempts.push(text.trim());
+
+    for (const candidate of attempts) {
+      // Direct parse
+      try { return JSON.parse(candidate); } catch { /* continue */ }
+
+      // Fix unescaped newlines inside strings
       try {
-        return JSON.parse(objectMatch[1]);
-      } catch { /* fall through */ }
+        const fixed = candidate.replace(/"([^"]*)"/g, (_, inner) =>
+          `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
+        );
+        return JSON.parse(fixed);
+      } catch { /* continue */ }
+
+      // Remove trailing commas
+      try {
+        const noTrailing = candidate.replace(/,\s*([}\]])/g, '$1');
+        return JSON.parse(noTrailing);
+      } catch { /* continue */ }
+
+      // Both fixes combined
+      try {
+        const combined = candidate
+          .replace(/"([^"]*)"/g, (_, inner) =>
+            `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
+          )
+          .replace(/,\s*([}\]])/g, '$1');
+        return JSON.parse(combined);
+      } catch { /* continue */ }
     }
 
-    // Last resort: parse the whole text
-    try {
-      return JSON.parse(text.trim());
-    } catch (error) {
-      this.logger.error(`Failed to parse AI JSON response: ${text.slice(0, 200)}`);
-      throw new Error(`AI returned invalid JSON: ${error.message}`);
-    }
+    this.logger.error(`Failed to parse AI JSON response: ${text.slice(0, 300)}`);
+    throw new Error(`AI returned invalid JSON: ${text.slice(0, 100)}`);
   }
 }
