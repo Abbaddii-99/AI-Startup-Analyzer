@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store'
 import { Navbar } from '@/components/Navbar'
 import { ScoreCard, scoreColor, scoreBg } from '@/components/ScoreCard'
 import RiskRadar from '@/components/RiskRadar'
+import Roadmap from '@/components/Roadmap'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -327,6 +328,13 @@ export default function AnalysisPage() {
         {analysis.riskRadar && (
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <RiskRadar data={analysis.riskRadar} />
+          </div>
+        )}
+
+        {/* Roadmap */}
+        {analysis.roadmap && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <Roadmap data={analysis.roadmap} />
           </div>
         )}
 
