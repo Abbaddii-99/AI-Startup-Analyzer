@@ -101,45 +101,69 @@ export class AIService {
   }
 
   parseJSON<T>(text: string): T {
-    const attempts: string[] = [];
+    const candidates: string[] = [];
 
-    // 1. Try ```json ... ``` block
+    // 1. ```json ... ``` block
     const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) attempts.push(fenceMatch[1].trim());
+    if (fenceMatch) candidates.push(fenceMatch[1].trim());
 
-    // 2. Try first { ... } or [ ... ] block
+    // 2. First { ... } or [ ... ] block
     const objectMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-    if (objectMatch) attempts.push(objectMatch[1]);
+    if (objectMatch) candidates.push(objectMatch[1]);
 
     // 3. Whole text
-    attempts.push(text.trim());
+    candidates.push(text.trim());
 
-    for (const candidate of attempts) {
+    for (const raw of candidates) {
       // Direct parse
-      try { return JSON.parse(candidate); } catch { /* continue */ }
+      try { return JSON.parse(raw); } catch { /* continue */ }
 
-      // Fix unescaped newlines inside strings
+      // Remove trailing commas then parse
       try {
-        const fixed = candidate.replace(/"([^"]*)"/g, (_, inner) =>
-          `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
-        );
-        return JSON.parse(fixed);
-      } catch { /* continue */ }
-
-      // Remove trailing commas
-      try {
-        const noTrailing = candidate.replace(/,\s*([}\]])/g, '$1');
+        const noTrailing = raw.replace(/,\s*([}\]])/g, '$1');
         return JSON.parse(noTrailing);
       } catch { /* continue */ }
 
-      // Both fixes combined
+      // Use JSON5-style: replace actual newlines/tabs inside the raw string
+      // by processing char by char to avoid breaking unicode
       try {
-        const combined = candidate
-          .replace(/"([^"]*)"/g, (_, inner) =>
-            `"${inner.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`
-          )
-          .replace(/,\s*([}\]])/g, '$1');
-        return JSON.parse(combined);
+        let inString = false;
+        let escaped = false;
+        let result = '';
+        for (let i = 0; i < raw.length; i++) {
+          const ch = raw[i];
+          if (escaped) { result += ch; escaped = false; continue; }
+          if (ch === '\\') { escaped = true; result += ch; continue; }
+          if (ch === '"') { inString = !inString; result += ch; continue; }
+          if (inString) {
+            if (ch === '\n') { result += '\\n'; continue; }
+            if (ch === '\r') { result += '\\r'; continue; }
+            if (ch === '\t') { result += '\\t'; continue; }
+          }
+          result += ch;
+        }
+        return JSON.parse(result);
+      } catch { /* continue */ }
+
+      // Both: char-by-char fix + trailing commas
+      try {
+        let inString = false;
+        let escaped = false;
+        let result = '';
+        for (let i = 0; i < raw.length; i++) {
+          const ch = raw[i];
+          if (escaped) { result += ch; escaped = false; continue; }
+          if (ch === '\\') { escaped = true; result += ch; continue; }
+          if (ch === '"') { inString = !inString; result += ch; continue; }
+          if (inString) {
+            if (ch === '\n') { result += '\\n'; continue; }
+            if (ch === '\r') { result += '\\r'; continue; }
+            if (ch === '\t') { result += '\\t'; continue; }
+          }
+          result += ch;
+        }
+        const fixed = result.replace(/,\s*([}\]])/g, '$1');
+        return JSON.parse(fixed);
       } catch { /* continue */ }
     }
 
