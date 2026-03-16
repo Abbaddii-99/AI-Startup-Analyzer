@@ -7,6 +7,7 @@ import { MVPGeneratorAgent } from './mvp-generator.agent';
 import { MonetizationAgent } from './monetization.agent';
 import { GoToMarketAgent } from './go-to-market.agent';
 import { FinalReportAgent } from './final-report.agent';
+import { RiskRadarAgent } from './risk-radar.agent';
 
 @Module({
   providers: [
@@ -18,6 +19,7 @@ import { FinalReportAgent } from './final-report.agent';
     MonetizationAgent,
     GoToMarketAgent,
     FinalReportAgent,
+    RiskRadarAgent,
   ],
   exports: [
     AIService,
@@ -28,6 +30,7 @@ import { FinalReportAgent } from './final-report.agent';
     MonetizationAgent,
     GoToMarketAgent,
     FinalReportAgent,
+    RiskRadarAgent,
   ],
 })
 export class AgentsModule {}
