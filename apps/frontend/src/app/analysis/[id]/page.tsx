@@ -9,6 +9,8 @@ import { ScoreCard, scoreColor, scoreBg } from '@/components/ScoreCard'
 import RiskRadar from '@/components/RiskRadar'
 import Roadmap from '@/components/Roadmap'
 import BusinessModel from '@/components/BusinessModel'
+import CompetitorCards from '@/components/CompetitorCards'
+import TargetAudienceCards from '@/components/TargetAudienceCards'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -286,14 +288,12 @@ export default function AnalysisPage() {
           </div>
         </div>
 
-        {/* Report Sections — now rendered with react-markdown */}
+        {/* Report Sections */}
         <div className="grid md:grid-cols-2 gap-4">
           {[
             { title: 'Idea Summary', content: report.ideaSummary, icon: '💡' },
             { title: 'Problem', content: report.problem, icon: '🎯' },
-            { title: 'Target Market', content: report.targetMarket, icon: '👥' },
             { title: 'Market Analysis', content: report.marketAnalysis, icon: '📊' },
-            { title: 'Competitors', content: report.competitors, icon: '⚔️' },
             { title: 'MVP Plan', content: report.mvp, icon: '🚀' },
             { title: 'Monetization', content: report.monetization, icon: '💰' },
             { title: 'Go-To-Market', content: report.goToMarket, icon: '📣' },
@@ -306,6 +306,20 @@ export default function AnalysisPage() {
             </div>
           ))}
         </div>
+
+        {/* Target Audience Cards */}
+        {analysis.ideaAnalysis && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <TargetAudienceCards data={analysis.ideaAnalysis} />
+          </div>
+        )}
+
+        {/* Competitor Cards */}
+        {analysis.competitorAnalysis && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <CompetitorCards data={analysis.competitorAnalysis} />
+          </div>
+        )}
 
         <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
           <h3 className="font-bold mb-4 text-red-800 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Risks</h3>
