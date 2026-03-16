@@ -11,6 +11,7 @@ import Roadmap from '@/components/Roadmap'
 import BusinessModel from '@/components/BusinessModel'
 import CompetitorCards from '@/components/CompetitorCards'
 import TargetAudienceCards from '@/components/TargetAudienceCards'
+import MarketSizeVisual from '@/components/MarketSizeVisual'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -311,6 +312,13 @@ export default function AnalysisPage() {
         {analysis.ideaAnalysis && (
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <TargetAudienceCards data={analysis.ideaAnalysis} />
+          </div>
+        )}
+
+        {/* Market Size Visual */}
+        {analysis.marketResearch && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <MarketSizeVisual data={analysis.marketResearch} />
           </div>
         )}
 
