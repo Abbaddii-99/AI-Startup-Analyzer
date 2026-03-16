@@ -14,6 +14,7 @@ import TargetAudienceCards from '@/components/TargetAudienceCards'
 import MarketSizeVisual from '@/components/MarketSizeVisual'
 import VisionMission from '@/components/VisionMission'
 import BrandIdentity from '@/components/BrandIdentity'
+import BudgetEstimator from '@/components/BudgetEstimator'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -381,6 +382,14 @@ export default function AnalysisPage() {
         {analysis.businessModel && (
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <BusinessModel data={analysis.businessModel} />
+          </div>
+        )}
+
+        {/* Budget Estimator */}
+        {analysis.budgetEstimate && (
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 shadow-sm">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">💰 Budget Estimator</h2>
+            <BudgetEstimator data={analysis.budgetEstimate} />
           </div>
         )}
 

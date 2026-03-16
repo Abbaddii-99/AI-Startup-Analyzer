@@ -63,6 +63,7 @@ model Analysis {
   businessModel      Json?
   visionMission      Json?
   brandIdentity      Json?
+  budgetEstimate     Json?
 
   // Scoring
   marketDemandScore        Float?
