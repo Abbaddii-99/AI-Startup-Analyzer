@@ -9,6 +9,7 @@ import { MVPGeneratorAgent } from '../agents/mvp-generator.agent';
 import { MonetizationAgent } from '../agents/monetization.agent';
 import { GoToMarketAgent } from '../agents/go-to-market.agent';
 import { FinalReportAgent } from '../agents/final-report.agent';
+import { RiskRadarAgent } from '../agents/risk-radar.agent';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -33,6 +34,7 @@ export class AnalysisProcessor extends WorkerHost {
     private monetization: MonetizationAgent,
     private goToMarket: GoToMarketAgent,
     private finalReport: FinalReportAgent,
+    private riskRadar: RiskRadarAgent,
   ) {
     super();
   }
@@ -53,7 +55,10 @@ export class AnalysisProcessor extends WorkerHost {
       const agentResults = await this.runAgentsWithProgress(job, idea);
       await job.updateProgress(90);
 
-      const finalReportData = await this.finalReport.execute(idea, agentResults);
+      const [finalReportData, riskRadarData] = await Promise.all([
+        this.finalReport.execute(idea, agentResults),
+        this.riskRadar.execute(idea, agentResults),
+      ]);
       await job.updateProgress(98);
 
       await prisma.analysis.update({
@@ -67,6 +72,7 @@ export class AnalysisProcessor extends WorkerHost {
           monetization: agentResults.monetization as any,
           goToMarket: agentResults.goToMarket as any,
           finalReport: finalReportData as any,
+          riskRadar: riskRadarData as any,
           marketDemandScore: finalReportData.score.marketDemand,
           competitionScore: finalReportData.score.competition,
           executionDifficultyScore: finalReportData.score.executionDifficulty,

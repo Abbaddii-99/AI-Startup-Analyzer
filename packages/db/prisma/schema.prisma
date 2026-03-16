@@ -58,6 +58,7 @@ model Analysis {
   monetization       Json?
   goToMarket         Json?
   finalReport        Json?
+  riskRadar          Json?
 
   // Scoring
   marketDemandScore        Float?

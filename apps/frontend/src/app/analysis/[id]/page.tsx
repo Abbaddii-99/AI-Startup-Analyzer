@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import { Navbar } from '@/components/Navbar'
 import { ScoreCard, scoreColor, scoreBg } from '@/components/ScoreCard'
+import RiskRadar from '@/components/RiskRadar'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -321,6 +322,13 @@ export default function AnalysisPage() {
             <ReactMarkdown>{renderVal(report.verdict)}</ReactMarkdown>
           </div>
         </div>
+
+        {/* Risk Radar */}
+        {analysis.riskRadar && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <RiskRadar data={analysis.riskRadar} />
+          </div>
+        )}
 
         <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
           <h3 className="font-bold mb-4 text-blue-800 flex items-center gap-2"><Lightbulb className="w-5 h-5" /> Market Validation Questions</h3>
