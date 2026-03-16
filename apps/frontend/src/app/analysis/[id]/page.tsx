@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
-import { Navbar } from '@/components/Navbar'
-import { ScoreCard, scoreColor, scoreBg } from '@/components/ScoreCard'
+import Sidebar from '@/components/Sidebar'
+import { ScoreCard } from '@/components/ScoreCard'
 import RiskRadar from '@/components/RiskRadar'
 import Roadmap from '@/components/Roadmap'
 import BusinessModel from '@/components/BusinessModel'
@@ -18,7 +18,7 @@ import BudgetEstimator from '@/components/BudgetEstimator'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
-  MessageCircle, Send, CheckCircle, AlertTriangle, Lightbulb
+  CheckCircle, AlertTriangle, Lightbulb, Send, MessageCircle
 } from 'lucide-react'
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -26,7 +26,7 @@ import {
 } from 'recharts'
 
 const PROGRESS_LABELS: Record<number, string> = {
-  5:  'Starting...',
+  5: 'Starting...',
   19: 'Analyzing idea...',
   33: 'Researching market...',
   47: 'Analyzing competitors...',
@@ -38,6 +38,11 @@ const PROGRESS_LABELS: Record<number, string> = {
   100: 'Done!',
 }
 
+const SECTION_IDS = [
+  'summary', 'analysis', 'target-audience', 'market-size', 'competitors',
+  'mvp', 'business-model', 'risks', 'roadmap', 'brand', 'vision', 'budget',
+]
+
 export default function AnalysisPage() {
   const params = useParams()
   const router = useRouter()
@@ -46,6 +51,7 @@ export default function AnalysisPage() {
   const [progress, setProgress] = useState(0)
   const [progressLabel, setProgressLabel] = useState('Initializing agents...')
   const [loading, setLoading] = useState(true)
+  const [activeSection, setActiveSection] = useState('summary')
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -53,6 +59,7 @@ export default function AnalysisPage() {
   const [copied, setCopied] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
 
   useEffect(() => {
     if (!token) { router.push('/auth/login'); return }
@@ -65,12 +72,8 @@ export default function AnalysisPage() {
           const { data } = await api.get(`/analysis/${params.id}/progress`)
           const p = data.progress || 0
           setProgress(p)
-          const labelKey = Object.keys(PROGRESS_LABELS)
-            .map(Number)
-            .filter(k => k <= p)
-            .pop()
+          const labelKey = Object.keys(PROGRESS_LABELS).map(Number).filter(k => k <= p).pop()
           if (labelKey !== undefined) setProgressLabel(PROGRESS_LABELS[labelKey])
-
           if (data.status === 'COMPLETED') {
             clearInterval(interval!)
             const { data: full } = await api.get(`/analysis/${params.id}`)
@@ -86,25 +89,43 @@ export default function AnalysisPage() {
       try {
         const { data } = await api.get(`/analysis/${params.id}`)
         setAnalysis(data)
-        if (data.status === 'COMPLETED' || data.status === 'FAILED') {
-          setLoading(false)
-          return
-        }
+        if (data.status === 'COMPLETED' || data.status === 'FAILED') { setLoading(false); return }
         pollProgress()
-      } catch {
-        setLoading(false)
-      }
+      } catch { setLoading(false) }
     }
 
     fetchAnalysis()
-
     return () => { if (interval) clearInterval(interval) }
   }, [params.id, token, router])
 
-  // Auto-scroll chat to bottom
+  // IntersectionObserver to track active section
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatMessages])
+    if (loading) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+            break
+          }
+        }
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+    )
+    SECTION_IDS.forEach(id => {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [loading, analysis])
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chatMessages])
+
+  const scrollToSection = useCallback((id: string) => {
+    const el = document.getElementById(id)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActiveSection(id)
+  }, [])
 
   const exportPDF = async () => {
     const { default: jsPDF } = await import('jspdf')
@@ -135,20 +156,16 @@ export default function AnalysisPage() {
     setChatInput('')
     setChatMessages(prev => [...prev, { role: 'user', content: userMsg }])
     setChatLoading(true)
-
     try {
-      const context = JSON.stringify(analysis?.finalReport || {})
       const { data } = await api.post('/analysis/chat', {
         message: userMsg,
-        context,
+        context: JSON.stringify(analysis?.finalReport || {}),
         analysisId: params.id,
       })
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
     } catch {
       setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }])
-    } finally {
-      setChatLoading(false)
-    }
+    } finally { setChatLoading(false) }
   }
 
   if (loading) {
@@ -219,196 +236,247 @@ export default function AnalysisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar
-        variant="analysis"
-        rightSlot={
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar
+        analysis={analysis}
+        activeSection={activeSection}
+        onSectionClick={scrollToSection}
+        onChatOpen={() => setChatOpen(true)}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="bg-white border-b px-6 py-3 flex items-center justify-between shrink-0 z-10">
+          <div className="text-sm text-gray-500 capitalize">{activeSection.replace(/-/g, ' ')}</div>
           <div className="flex items-center gap-2">
-            <button onClick={shareLink} className="flex items-center gap-2 border px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
+            <button onClick={shareLink} className="flex items-center gap-2 border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition">
               <Share2 className="w-4 h-4" />
               {copied ? 'Copied!' : 'Share'}
             </button>
-            <button onClick={exportPDF} className="flex items-center gap-2 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+            <button onClick={exportPDF} className="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600 transition">
               <Download className="w-4 h-4" /> Export PDF
             </button>
-            <button onClick={() => setChatOpen(!chatOpen)} className="flex items-center gap-2 bg-purple-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-purple-600 transition">
-              <MessageCircle className="w-4 h-4" /> Ask AI
-            </button>
           </div>
-        }
-      />
+        </header>
 
-      <div className="max-w-5xl mx-auto p-6 space-y-6" ref={reportRef}>
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-2xl">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">Analysis Complete</h1>
-              <p className="text-blue-100 text-sm">{analysis.idea}</p>
-            </div>
-            <div className="text-center ml-6">
-              <div className={`text-5xl font-bold ${score.overall >= 7 ? 'text-green-300' : score.overall >= 5 ? 'text-yellow-300' : 'text-red-300'}`}>
-                {score.overall}
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-y-auto" ref={reportRef}>
+          <div className="max-w-4xl mx-auto p-6 space-y-10">
+
+            {/* SUMMARY */}
+            <section id="summary" className="scroll-mt-4 space-y-6">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-2xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h1 className="text-3xl font-bold mb-2">Analysis Complete</h1>
+                    <p className="text-blue-100 text-sm">{analysis.idea}</p>
+                  </div>
+                  <div className="text-center ml-6">
+                    <div className={`text-5xl font-bold ${score.overall >= 7 ? 'text-green-300' : score.overall >= 5 ? 'text-yellow-300' : 'text-red-300'}`}>
+                      {score.overall}
+                    </div>
+                    <div className="text-blue-200 text-sm">/ 10</div>
+                    <div className="text-blue-200 text-xs mt-1">Overall Score</div>
+                  </div>
+                </div>
               </div>
-              <div className="text-blue-200 text-sm">/ 10</div>
-              <div className="text-blue-200 text-xs mt-1">Overall Score</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: <TrendingUp className="w-5 h-5" />, title: 'Market Demand', score: score.marketDemand },
-            { icon: <Users className="w-5 h-5" />, title: 'Competition', score: score.competition },
-            { icon: <Zap className="w-5 h-5" />, title: 'Execution', score: score.executionDifficulty },
-            { icon: <DollarSign className="w-5 h-5" />, title: 'Profit Potential', score: score.profitPotential },
-          ].map((card) => (
-            <ScoreCard key={card.title} score={card.score} label={card.title} icon={card.icon} />
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <h3 className="font-bold mb-4">Score Radar</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
-                <Radar dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <h3 className="font-bold mb-4">Score Breakdown</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={barData} layout="vertical">
-                <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
-                <Tooltip />
-                <Bar dataKey="score" radius={4}>
-                  {barData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Vision & Mission */}
-        {analysis.visionMission && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <VisionMission data={analysis.visionMission} />
-          </div>
-        )}
-
-        {/* Brand Identity */}
-        {analysis.brandIdentity && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <BrandIdentity data={analysis.brandIdentity} />
-          </div>
-        )}
-
-        {/* Report Sections */}
-        <div className="grid md:grid-cols-2 gap-4">
-          {[
-            { title: 'Idea Summary', content: report.ideaSummary, icon: '💡' },
-            { title: 'Problem', content: report.problem, icon: '🎯' },
-            { title: 'Market Analysis', content: report.marketAnalysis, icon: '📊' },
-            { title: 'MVP Plan', content: report.mvp, icon: '🚀' },
-            { title: 'Monetization', content: report.monetization, icon: '💰' },
-            { title: 'Go-To-Market', content: report.goToMarket, icon: '📣' },
-          ].map((s) => (
-            <div key={s.title} className="bg-white p-5 rounded-xl border shadow-sm">
-              <h3 className="font-bold mb-3 flex items-center gap-2">{s.icon} {s.title}</h3>
-              <div className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
-                <ReactMarkdown>{renderVal(s.content)}</ReactMarkdown>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { icon: <TrendingUp className="w-5 h-5" />, title: 'Market Demand', score: score.marketDemand },
+                  { icon: <Users className="w-5 h-5" />, title: 'Competition', score: score.competition },
+                  { icon: <Zap className="w-5 h-5" />, title: 'Execution', score: score.executionDifficulty },
+                  { icon: <DollarSign className="w-5 h-5" />, title: 'Profit Potential', score: score.profitPotential },
+                ].map((card) => (
+                  <ScoreCard key={card.title} score={card.score} label={card.title} icon={card.icon} />
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Target Audience Cards */}
-        {analysis.ideaAnalysis && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <TargetAudienceCards data={analysis.ideaAnalysis} />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <h3 className="font-bold mb-4">Score Radar</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={radarData}>
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                      <Radar dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <h3 className="font-bold mb-4">Score Breakdown</h3>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={barData} layout="vertical">
+                      <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 11 }} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
+                      <Tooltip />
+                      <Bar dataKey="score" radius={4}>
+                        {barData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  { title: 'Idea Summary', content: report.ideaSummary, icon: '💡' },
+                  { title: 'Problem', content: report.problem, icon: '🎯' },
+                  { title: 'Market Analysis', content: report.marketAnalysis, icon: '📊' },
+                  { title: 'MVP Plan', content: report.mvp, icon: '🚀' },
+                  { title: 'Monetization', content: report.monetization, icon: '💰' },
+                  { title: 'Go-To-Market', content: report.goToMarket, icon: '📣' },
+                ].map((s) => (
+                  <div key={s.title} className="bg-white p-5 rounded-xl border shadow-sm">
+                    <h3 className="font-bold mb-3 flex items-center gap-2">{s.icon} {s.title}</h3>
+                    <div className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                      <ReactMarkdown>{renderVal(s.content)}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-green-50 border border-green-200 p-6 rounded-xl">
+                <h3 className="font-bold mb-3 text-green-800 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> Final Verdict</h3>
+                <div className="text-green-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                  <ReactMarkdown>{renderVal(report.verdict)}</ReactMarkdown>
+                </div>
+              </div>
+            </section>
+
+            {/* ANALYSIS */}
+            <section id="analysis" className="scroll-mt-4">
+              <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-500" /> Analysis
+              </h2>
+            </section>
+
+            {/* TARGET AUDIENCE */}
+            {analysis.ideaAnalysis && (
+              <section id="target-audience" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <TargetAudienceCards data={analysis.ideaAnalysis} />
+                </div>
+              </section>
+            )}
+
+            {/* MARKET SIZE */}
+            {analysis.marketResearch && (
+              <section id="market-size" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <MarketSizeVisual data={analysis.marketResearch} />
+                </div>
+              </section>
+            )}
+
+            {/* COMPETITORS */}
+            {analysis.competitorAnalysis && (
+              <section id="competitors" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <CompetitorCards data={analysis.competitorAnalysis} />
+                </div>
+              </section>
+            )}
+
+            {/* MVP */}
+            <section id="mvp" className="scroll-mt-4">
+              <div className="bg-white p-6 rounded-xl border shadow-sm">
+                <h3 className="font-bold mb-3 flex items-center gap-2">🚀 MVP Plan</h3>
+                <div className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                  <ReactMarkdown>{renderVal(report.mvp)}</ReactMarkdown>
+                </div>
+              </div>
+            </section>
+
+            {/* BUSINESS MODEL */}
+            {analysis.businessModel && (
+              <section id="business-model" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <BusinessModel data={analysis.businessModel} />
+                </div>
+              </section>
+            )}
+
+            {/* RISKS */}
+            <section id="risks" className="scroll-mt-4 space-y-4">
+              <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
+                <h3 className="font-bold mb-4 text-red-800 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Risks</h3>
+                <ul className="space-y-2">
+                  {(Array.isArray(report.risks) ? report.risks : [report.risks]).map((risk: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-red-700 text-sm">
+                      <span className="mt-0.5 shrink-0">•</span> {risk}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {analysis.riskRadar && (
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <RiskRadar data={analysis.riskRadar} />
+                </div>
+              )}
+            </section>
+
+            {/* ROADMAP */}
+            {analysis.roadmap && (
+              <section id="roadmap" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <Roadmap data={analysis.roadmap} />
+                </div>
+              </section>
+            )}
+
+            {/* BRAND */}
+            {analysis.brandIdentity && (
+              <section id="brand" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <BrandIdentity data={analysis.brandIdentity} />
+                </div>
+              </section>
+            )}
+
+            {/* VISION & MISSION */}
+            {analysis.visionMission && (
+              <section id="vision" className="scroll-mt-4">
+                <div className="bg-white p-6 rounded-xl border shadow-sm">
+                  <VisionMission data={analysis.visionMission} />
+                </div>
+              </section>
+            )}
+
+            {/* BUDGET */}
+            {analysis.budgetEstimate && (
+              <section id="budget" className="scroll-mt-4">
+                <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 shadow-sm">
+                  <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">💰 Budget Estimator</h2>
+                  <BudgetEstimator data={analysis.budgetEstimate} />
+                </div>
+              </section>
+            )}
+
+            {/* MARKET VALIDATION */}
+            <section className="scroll-mt-4">
+              <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
+                <h3 className="font-bold mb-4 text-blue-800 flex items-center gap-2"><Lightbulb className="w-5 h-5" /> Market Validation Questions</h3>
+                <p className="text-blue-600 text-xs mb-3">Ask these questions to potential customers to validate your idea:</p>
+                <ul className="space-y-2">
+                  {generateValidationQuestions(analysis.idea).map((q, i) => (
+                    <li key={i} className="flex items-start gap-2 text-blue-700 text-sm">
+                      <span className="font-bold shrink-0">{i + 1}.</span> {q}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
           </div>
-        )}
-
-        {/* Market Size Visual */}
-        {analysis.marketResearch && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <MarketSizeVisual data={analysis.marketResearch} />
-          </div>
-        )}
-
-        {/* Competitor Cards */}
-        {analysis.competitorAnalysis && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <CompetitorCards data={analysis.competitorAnalysis} />
-          </div>
-        )}
-
-        <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
-          <h3 className="font-bold mb-4 text-red-800 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Risks</h3>
-          <ul className="space-y-2">
-            {(Array.isArray(report.risks) ? report.risks : [report.risks]).map((risk: string, i: number) => (
-              <li key={i} className="flex items-start gap-2 text-red-700 text-sm">
-                <span className="mt-0.5 shrink-0">•</span> {risk}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 p-6 rounded-xl">
-          <h3 className="font-bold mb-3 text-green-800 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> Final Verdict</h3>
-          <div className="text-green-700 text-sm leading-relaxed prose prose-sm max-w-none">
-            <ReactMarkdown>{renderVal(report.verdict)}</ReactMarkdown>
-          </div>
-        </div>
-
-        {/* Risk Radar */}
-        {analysis.riskRadar && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <RiskRadar data={analysis.riskRadar} />
-          </div>
-        )}
-
-        {/* Roadmap */}
-        {analysis.roadmap && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <Roadmap data={analysis.roadmap} />
-          </div>
-        )}
-
-        {/* Business Model */}
-        {analysis.businessModel && (
-          <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <BusinessModel data={analysis.businessModel} />
-          </div>
-        )}
-
-        {/* Budget Estimator */}
-        {analysis.budgetEstimate && (
-          <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 shadow-sm">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">💰 Budget Estimator</h2>
-            <BudgetEstimator data={analysis.budgetEstimate} />
-          </div>
-        )}
-
-        <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
-          <h3 className="font-bold mb-4 text-blue-800 flex items-center gap-2"><Lightbulb className="w-5 h-5" /> Market Validation Questions</h3>
-          <p className="text-blue-600 text-xs mb-3">Ask these questions to potential customers to validate your idea:</p>
-          <ul className="space-y-2">
-            {generateValidationQuestions(analysis.idea).map((q, i) => (
-              <li key={i} className="flex items-start gap-2 text-blue-700 text-sm">
-                <span className="font-bold shrink-0">{i + 1}.</span> {q}
-              </li>
-            ))}
-          </ul>
-        </div>
+        </main>
       </div>
 
       {/* Chat Panel */}
       {chatOpen && (
-        <div className="fixed bottom-4 right-4 w-80 bg-white rounded-2xl shadow-2xl border flex flex-col" style={{ height: '420px' }}>
+        <div className="fixed bottom-4 right-4 w-80 bg-white rounded-2xl shadow-2xl border flex flex-col z-50" style={{ height: '420px' }}>
           <div className="bg-purple-500 text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
@@ -433,9 +501,7 @@ export default function AnalysisPage() {
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs leading-relaxed ${m.role === 'user' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-800'}`}>
                   {m.role === 'assistant' ? (
-                    <div className="prose prose-xs max-w-none">
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
-                    </div>
+                    <div className="prose prose-xs max-w-none"><ReactMarkdown>{m.content}</ReactMarkdown></div>
                   ) : m.content}
                 </div>
               </div>

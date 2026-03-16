@@ -1,165 +1,185 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, Search, ChevronDown, ChevronRight,
-  Users, Swords, BarChart2, Briefcase, Rocket, Shield,
-  DollarSign, Palette, FileText, Wallet, MoreHorizontal,
-  ArrowLeft, Lock, Sparkles
+  LayoutDashboard, TrendingUp, Users, Globe, Briefcase, Cpu,
+  AlertTriangle, Map, DollarSign, Palette, Eye, ChevronDown,
+  ChevronRight, Sparkles, LogOut, MessageCircle
 } from 'lucide-react'
+import api from '@/lib/api'
+import { useAuthStore } from '@/lib/store'
 
-export type SidebarSection =
-  | 'summary'
-  | 'customers'
-  | 'competition'
-  | 'market'
-  | 'business-model'
-  | 'mvp'
-  | 'risk'
-  | 'financial'
-  | 'brand'
-  | 'business-plan'
-  | 'budget'
-
-interface SidebarProps {
-  active: SidebarSection
-  onChange: (section: SidebarSection) => void
-  projectName: string
-  userEmail: string
-  userPlan: 'FREE' | 'PRO' | 'TEAM'
+interface SidebarSection {
+  id: string
+  label: string
+  icon: React.ReactNode
+  children?: { id: string; label: string; icon: React.ReactNode }[]
 }
 
-const analysisSubItems: { key: SidebarSection; label: string; icon: React.ReactNode; pro?: boolean }[] = [
-  { key: 'customers',       label: 'Customers',        icon: <Users className="w-3.5 h-3.5" /> },
-  { key: 'competition',     label: 'Competition',       icon: <Swords className="w-3.5 h-3.5" /> },
-  { key: 'market',          label: 'Market Potential',  icon: <BarChart2 className="w-3.5 h-3.5" /> },
-  { key: 'business-model',  label: 'Business Model',    icon: <Briefcase className="w-3.5 h-3.5" /> },
-  { key: 'mvp',             label: 'MVP',               icon: <Rocket className="w-3.5 h-3.5" /> },
-  { key: 'risk',            label: 'Risk Assessment',   icon: <Shield className="w-3.5 h-3.5" /> },
-  { key: 'financial',       label: 'Financial Plan',    icon: <DollarSign className="w-3.5 h-3.5" />, pro: true },
+const SECTIONS: SidebarSection[] = [
+  { id: 'summary', label: 'Summary', icon: <LayoutDashboard className="w-4 h-4" /> },
+  {
+    id: 'analysis', label: 'Analysis', icon: <TrendingUp className="w-4 h-4" />,
+    children: [
+      { id: 'target-audience', label: 'Customers', icon: <Users className="w-4 h-4" /> },
+      { id: 'market-size', label: 'Market Potential', icon: <Globe className="w-4 h-4" /> },
+      { id: 'competitors', label: 'Competition', icon: <Briefcase className="w-4 h-4" /> },
+      { id: 'mvp', label: 'MVP', icon: <Cpu className="w-4 h-4" /> },
+      { id: 'business-model', label: 'Business Model', icon: <DollarSign className="w-4 h-4" /> },
+      { id: 'risks', label: 'Risk Assessment', icon: <AlertTriangle className="w-4 h-4" /> },
+    ],
+  },
+  { id: 'roadmap', label: 'Roadmap', icon: <Map className="w-4 h-4" /> },
+  { id: 'brand', label: 'Brand', icon: <Palette className="w-4 h-4" /> },
+  { id: 'vision', label: 'Vision & Mission', icon: <Eye className="w-4 h-4" /> },
+  { id: 'budget', label: 'Budget', icon: <DollarSign className="w-4 h-4" /> },
 ]
 
-export default function Sidebar({ active, onChange, projectName, userEmail, userPlan }: SidebarProps) {
+interface SidebarProps {
+  analysis: any
+  activeSection: string
+  onSectionClick: (id: string) => void
+  onChatOpen: () => void
+}
+
+export default function Sidebar({ analysis, activeSection, onSectionClick, onChatOpen }: SidebarProps) {
   const router = useRouter()
-  const [analysisOpen, setAnalysisOpen] = useState(
-    ['customers','competition','market','business-model','mvp','risk','financial'].includes(active)
-  )
+  const { user, refreshToken, logout: storeLogout } = useAuthStore()
+  const [analysisExpanded, setAnalysisExpanded] = useState(true)
 
-  const isAnalysisChild = analysisSubItems.some(i => i.key === active)
-
-  const navItem = (
-    key: SidebarSection,
-    label: string,
-    icon: React.ReactNode,
-    pro?: boolean
-  ) => {
-    const isActive = active === key
-    const locked = pro && userPlan === 'FREE'
-    return (
-      <button
-        key={key}
-        onClick={() => !locked && onChange(key)}
-        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition text-left
-          ${isActive ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-100'}
-          ${locked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
-        `}
-      >
-        <span className={isActive ? 'text-blue-600' : 'text-gray-400'}>{icon}</span>
-        <span className="flex-1">{label}</span>
-        {locked && <Lock className="w-3 h-3 text-gray-400" />}
-      </button>
-    )
+  const logout = async () => {
+    if (refreshToken) {
+      try { await api.post('/auth/logout', { refreshToken }) } catch {}
+    }
+    storeLogout()
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    router.push('/auth/login')
   }
 
+  const isActive = (id: string) => activeSection === id
+  const isChildActive = (section: SidebarSection) =>
+    section.children?.some(c => c.id === activeSection)
+
   return (
-    <aside className="w-56 shrink-0 h-screen sticky top-0 bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
-      {/* Back button */}
-      <div className="p-3 border-b border-gray-100">
+    <aside className="w-56 shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0 overflow-y-auto">
+      {/* Logo */}
+      <div className="p-4 border-b border-gray-800">
         <button
           onClick={() => router.push('/dashboard')}
-          className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-800 transition w-full px-2 py-1.5 rounded-lg hover:bg-gray-50"
+          className="flex items-center gap-2 text-white hover:text-blue-400 transition w-full"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          جميع الأفكار
+          <Sparkles className="w-5 h-5 text-blue-400 shrink-0" />
+          <span className="font-bold text-sm truncate">AI Startup Analyzer</span>
         </button>
       </div>
 
-      {/* Project name */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {projectName.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-gray-800 truncate">{projectName}</p>
-            <p className="text-[10px] text-gray-400">تحليل الفكرة</p>
-          </div>
-        </div>
+      {/* Back to dashboard */}
+      <div className="px-3 pt-3">
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition px-2 py-1.5 rounded-lg hover:bg-gray-800 w-full"
+        >
+          <LayoutDashboard className="w-3.5 h-3.5" />
+          All Ideas
+        </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-3 space-y-1">
-        {/* ملخص */}
-        {navItem('summary', 'ملخص', <LayoutDashboard className="w-4 h-4" />)}
-
-        {/* تحليل - collapsible */}
-        <div>
-          <button
-            onClick={() => setAnalysisOpen(!analysisOpen)}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition
-              ${isAnalysisChild && !analysisOpen ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-100'}
-            `}
-          >
-            <Search className={`w-4 h-4 ${isAnalysisChild && !analysisOpen ? 'text-blue-600' : 'text-gray-400'}`} />
-            <span className="flex-1 text-left">تحليل</span>
-            {analysisOpen
-              ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-              : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-            }
-          </button>
-
-          {analysisOpen && (
-            <div className="mt-1 ml-3 pl-3 border-l border-gray-100 space-y-0.5">
-              {analysisSubItems.map(item =>
-                navItem(item.key, item.label, item.icon, item.pro)
-              )}
-            </div>
-          )}
+      {/* Idea title */}
+      {analysis?.idea && (
+        <div className="px-3 pt-2 pb-3 border-b border-gray-800">
+          <p className="text-xs text-gray-500 px-2 mb-1">Current idea</p>
+          <p className="text-xs text-gray-300 px-2 line-clamp-2 leading-relaxed">{analysis.idea}</p>
         </div>
+      )}
 
-        {/* ماركة */}
-        {navItem('brand', 'ماركة', <Palette className="w-4 h-4" />)}
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-3 space-y-0.5">
+        {SECTIONS.map((section) => {
+          if (section.children) {
+            const expanded = analysisExpanded || isChildActive(section)
+            return (
+              <div key={section.id}>
+                <button
+                  onClick={() => {
+                    setAnalysisExpanded(!expanded)
+                    onSectionClick(section.id)
+                  }}
+                  className={`flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm transition ${
+                    isActive(section.id) || isChildActive(section)
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {section.icon}
+                  <span className="flex-1 text-left">{section.label}</span>
+                  {expanded
+                    ? <ChevronDown className="w-3 h-3" />
+                    : <ChevronRight className="w-3 h-3" />
+                  }
+                </button>
+                {expanded && (
+                  <div className="ml-3 mt-0.5 space-y-0.5 border-l border-gray-700 pl-3">
+                    {section.children.map((child) => (
+                      <button
+                        key={child.id}
+                        onClick={() => onSectionClick(child.id)}
+                        className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-xs transition ${
+                          isActive(child.id)
+                            ? 'bg-blue-600/80 text-white'
+                            : 'text-gray-500 hover:text-white hover:bg-gray-800'
+                        }`}
+                      >
+                        {child.icon}
+                        {child.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }
 
-        {/* خطة العمل */}
-        {navItem('business-plan', 'خطة العمل', <FileText className="w-4 h-4" />)}
+          return (
+            <button
+              key={section.id}
+              onClick={() => onSectionClick(section.id)}
+              className={`flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm transition ${
+                isActive(section.id)
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {section.icon}
+              {section.label}
+            </button>
+          )
+        })}
 
-        {/* بجفذ */}
-        {navItem('budget', 'بجفذ', <Wallet className="w-4 h-4" />)}
-
-        {/* أكثر */}
-        <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-50 transition">
-          <MoreHorizontal className="w-4 h-4" />
-          <span>أكثر</span>
+        {/* Ask AI button */}
+        <button
+          onClick={onChatOpen}
+          className="flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm text-purple-400 hover:text-white hover:bg-purple-600/30 transition mt-2"
+        >
+          <MessageCircle className="w-4 h-4" />
+          Ask AI
         </button>
       </nav>
 
-      {/* User info + upgrade */}
-      <div className="p-3 border-t border-gray-100 space-y-2">
-        {userPlan === 'FREE' && (
-          <button className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-semibold py-2 rounded-lg hover:opacity-90 transition">
-            <Sparkles className="w-3.5 h-3.5" />
-            قم بترقية خطتك
+      {/* User info */}
+      <div className="p-3 border-t border-gray-800">
+        <div className="flex items-center gap-2 px-2 py-2">
+          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-white truncate">{user?.name ?? user?.email}</p>
+            <span className="text-xs text-gray-500 capitalize">{user?.plan?.toLowerCase() ?? 'free'}</span>
+          </div>
+          <button onClick={logout} className="text-gray-500 hover:text-red-400 transition" title="Logout">
+            <LogOut className="w-3.5 h-3.5" />
           </button>
-        )}
-        <div className="flex items-center gap-2 px-1">
-          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
-            {userEmail.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-gray-500 truncate">{userEmail}</p>
-            <p className="text-[10px] text-gray-400">خطة {userPlan === 'FREE' ? 'مجانية' : userPlan}</p>
-          </div>
         </div>
       </div>
     </aside>
