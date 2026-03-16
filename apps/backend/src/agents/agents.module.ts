@@ -8,6 +8,7 @@ import { MonetizationAgent } from './monetization.agent';
 import { GoToMarketAgent } from './go-to-market.agent';
 import { FinalReportAgent } from './final-report.agent';
 import { RiskRadarAgent } from './risk-radar.agent';
+import { RoadmapAgent } from './roadmap.agent';
 
 @Module({
   providers: [
@@ -20,6 +21,7 @@ import { RiskRadarAgent } from './risk-radar.agent';
     GoToMarketAgent,
     FinalReportAgent,
     RiskRadarAgent,
+    RoadmapAgent,
   ],
   exports: [
     AIService,
@@ -31,6 +33,7 @@ import { RiskRadarAgent } from './risk-radar.agent';
     GoToMarketAgent,
     FinalReportAgent,
     RiskRadarAgent,
+    RoadmapAgent,
   ],
 })
 export class AgentsModule {}

@@ -59,6 +59,7 @@ model Analysis {
   goToMarket         Json?
   finalReport        Json?
   riskRadar          Json?
+  roadmap            Json?
 
   // Scoring
   marketDemandScore        Float?
