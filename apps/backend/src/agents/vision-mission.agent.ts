@@ -17,25 +17,24 @@ export class VisionMissionAgent implements Agent<VisionMission> {
   async execute(idea: string, context?: any): Promise<VisionMission> {
     const prompt = `You are a startup branding strategist. Respond in the same language as the startup idea.
 
-Based on this startup idea, craft a compelling Vision, Mission, and core values.
+Create Vision, Mission, and brand foundation for this startup. Keep ALL fields SHORT and concise.
 
 Startup idea: ${idea}
-${context?.ideaAnalysis ? `\nIdea Analysis: ${JSON.stringify(context.ideaAnalysis)}` : ''}
 
-Definitions:
-- Vision: The long-term aspirational future state (where we want to be in 10 years)
-- Mission: The current purpose and how we achieve the vision (what we do today)
-- Values: 3-4 core principles that guide the company
-- Unique Value Proposition: One sentence that explains what makes this different
-- Elevator Pitch: A 2-3 sentence pitch you'd give to an investor in 30 seconds
+Rules:
+- vision: max 15 words
+- mission: max 20 words
+- values: exactly 4 short words or phrases
+- uniqueValueProposition: max 15 words
+- elevatorPitch: max 40 words
 
 Return ONLY valid JSON:
 {
-  "vision": "To become the world's leading platform for...",
-  "mission": "We empower entrepreneurs by providing...",
-  "values": ["Innovation", "Transparency", "Customer First", "Impact"],
-  "uniqueValueProposition": "The only platform that...",
-  "elevatorPitch": "We help [target users] who struggle with [problem] by providing [solution]. Unlike [alternatives], we [key differentiator]. We're targeting a $[X]B market opportunity."
+  "vision": "short vision statement",
+  "mission": "short mission statement",
+  "values": ["Value1", "Value2", "Value3", "Value4"],
+  "uniqueValueProposition": "short UVP sentence",
+  "elevatorPitch": "short 2-sentence pitch for investors"
 }`;
 
     const response = await this.ai.generate(prompt);

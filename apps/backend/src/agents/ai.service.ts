@@ -94,7 +94,7 @@ export class AIService {
   private async generateWithOpenRouter(prompt: string, model = 'openai/gpt-4o-mini'): Promise<string> {
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
-      { model, messages: [{ role: 'user', content: prompt }] },
+      { model, messages: [{ role: 'user', content: prompt }], max_tokens: 4000 },
       { headers: { Authorization: `Bearer ${this.openRouterKey}`, 'Content-Type': 'application/json' } },
     );
     return response.data.choices[0].message.content;
