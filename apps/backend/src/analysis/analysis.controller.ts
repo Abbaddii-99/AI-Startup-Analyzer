@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AIService } from '../agents/ai.service';
@@ -54,6 +54,16 @@ export class AnalysisController {
   @Get(':id')
   async getOne(@Request() req, @Param('id') id: string): Promise<any> {
     return this.analysisService.getAnalysis(id, req.user.userId);
+  }
+
+  @Delete(':id')
+  async delete(@Request() req, @Param('id') id: string): Promise<any> {
+    return this.analysisService.deleteAnalysis(id, req.user.userId);
+  }
+
+  @Post(':id/retry')
+  async retry(@Request() req, @Param('id') id: string): Promise<any> {
+    return this.analysisService.retryAnalysis(id, req.user.userId);
   }
 
   @Get(':id/progress')

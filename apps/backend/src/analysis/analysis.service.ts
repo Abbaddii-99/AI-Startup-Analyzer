@@ -54,6 +54,21 @@ export class AnalysisService {
     return { status: analysis.status, progress: job ? job.progress : 0 };
   }
 
+  async deleteAnalysis(id: string, userId: string): Promise<any> {
+    const analysis = await this.getAnalysis(id, userId);
+    if (!analysis) throw new Error('Analysis not found');
+    await prisma.analysis.delete({ where: { id } });
+    return { success: true };
+  }
+
+  async retryAnalysis(id: string, userId: string): Promise<any> {
+    const analysis = await this.getAnalysis(id, userId);
+    if (!analysis) throw new Error('Analysis not found');
+    await prisma.analysis.update({ where: { id }, data: { status: 'PENDING' } });
+    await this.analysisQueue.add('analyze', { analysisId: id, idea: analysis.idea }, { jobId: `${id}-retry-${Date.now()}` });
+    return { success: true };
+  }
+
   async getUserPlanInfo(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
