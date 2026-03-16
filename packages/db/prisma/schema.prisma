@@ -62,6 +62,7 @@ model Analysis {
   roadmap            Json?
   businessModel      Json?
   visionMission      Json?
+  brandIdentity      Json?
 
   // Scoring
   marketDemandScore        Float?

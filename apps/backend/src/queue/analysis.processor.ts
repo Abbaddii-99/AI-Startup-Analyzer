@@ -13,6 +13,7 @@ import { RiskRadarAgent } from '../agents/risk-radar.agent';
 import { RoadmapAgent } from '../agents/roadmap.agent';
 import { BusinessModelAgent } from '../agents/business-model.agent';
 import { VisionMissionAgent } from '../agents/vision-mission.agent';
+import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -41,6 +42,7 @@ export class AnalysisProcessor extends WorkerHost {
     private roadmap: RoadmapAgent,
     private businessModel: BusinessModelAgent,
     private visionMission: VisionMissionAgent,
+    private brandIdentity: BrandIdentityAgent,
   ) {
     super();
   }
@@ -61,12 +63,13 @@ export class AnalysisProcessor extends WorkerHost {
       const agentResults = await this.runAgentsWithProgress(job, idea);
       await job.updateProgress(90);
 
-      const [finalReportData, riskRadarData, roadmapData, businessModelData, visionMissionData] = await Promise.all([
+      const [finalReportData, riskRadarData, roadmapData, businessModelData, visionMissionData, brandIdentityData] = await Promise.all([
         this.finalReport.execute(idea, agentResults),
         this.riskRadar.execute(idea, agentResults),
         this.roadmap.execute(idea, agentResults),
         this.businessModel.execute(idea, agentResults),
         this.visionMission.execute(idea, agentResults),
+        this.brandIdentity.execute(idea, agentResults),
       ]);
       await job.updateProgress(98);
 
@@ -85,6 +88,7 @@ export class AnalysisProcessor extends WorkerHost {
           roadmap: roadmapData as any,
           businessModel: businessModelData as any,
           visionMission: visionMissionData as any,
+          brandIdentity: brandIdentityData as any,
           marketDemandScore: finalReportData.score.marketDemand,
           competitionScore: finalReportData.score.competition,
           executionDifficultyScore: finalReportData.score.executionDifficulty,

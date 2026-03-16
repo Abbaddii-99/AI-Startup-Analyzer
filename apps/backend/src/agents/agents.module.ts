@@ -11,6 +11,7 @@ import { RiskRadarAgent } from './risk-radar.agent';
 import { RoadmapAgent } from './roadmap.agent';
 import { BusinessModelAgent } from './business-model.agent';
 import { VisionMissionAgent } from './vision-mission.agent';
+import { BrandIdentityAgent } from './brand-identity.agent';
 
 @Module({
   providers: [
@@ -26,6 +27,7 @@ import { VisionMissionAgent } from './vision-mission.agent';
     RoadmapAgent,
     BusinessModelAgent,
     VisionMissionAgent,
+    BrandIdentityAgent,
   ],
   exports: [
     AIService,
@@ -40,6 +42,7 @@ import { VisionMissionAgent } from './vision-mission.agent';
     RoadmapAgent,
     BusinessModelAgent,
     VisionMissionAgent,
+    BrandIdentityAgent,
   ],
 })
 export class AgentsModule {}

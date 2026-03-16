@@ -13,6 +13,7 @@ import CompetitorCards from '@/components/CompetitorCards'
 import TargetAudienceCards from '@/components/TargetAudienceCards'
 import MarketSizeVisual from '@/components/MarketSizeVisual'
 import VisionMission from '@/components/VisionMission'
+import BrandIdentity from '@/components/BrandIdentity'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -294,6 +295,13 @@ export default function AnalysisPage() {
         {analysis.visionMission && (
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <VisionMission data={analysis.visionMission} />
+          </div>
+        )}
+
+        {/* Brand Identity */}
+        {analysis.brandIdentity && (
+          <div className="bg-white p-6 rounded-xl border shadow-sm">
+            <BrandIdentity data={analysis.brandIdentity} />
           </div>
         )}
 
