@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { prisma } from '../prisma';
 import { IdeaAnalyzerAgent } from '../agents/idea-analyzer.agent';
+import { ComprehensiveIdeaAnalyzerAgent } from '../agents/comprehensive-idea-analyzer.agent';
 import { MarketResearchAgent } from '../agents/market-research.agent';
 import { CompetitorAnalysisAgent } from '../agents/competitor-analysis.agent';
 import { MVPGeneratorAgent } from '../agents/mvp-generator.agent';
@@ -17,6 +18,7 @@ import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
 
 const SECTION_FIELD_MAP: Record<string, string> = {
   'idea-analysis': 'ideaAnalysis',
+  'comprehensive-idea-analysis': 'comprehensiveIdeaAnalysis',
   'market-research': 'marketResearch',
   'competitor-analysis': 'competitorAnalysis',
   'mvp': 'mvpPlan',
@@ -35,6 +37,7 @@ export class AnalysisService {
   constructor(
     @InjectQueue('analysis') private analysisQueue: Queue,
     private ideaAnalyzer: IdeaAnalyzerAgent,
+    private comprehensiveIdeaAnalyzer: ComprehensiveIdeaAnalyzerAgent,
     private marketResearch: MarketResearchAgent,
     private competitorAnalysis: CompetitorAnalysisAgent,
     private mvpGenerator: MVPGeneratorAgent,
@@ -137,6 +140,7 @@ export class AnalysisService {
 
     const agentMap: Record<string, () => Promise<any>> = {
       'ideaAnalysis': () => this.ideaAnalyzer.execute(idea),
+      'comprehensiveIdeaAnalysis': () => this.comprehensiveIdeaAnalyzer.execute(idea),
       'marketResearch': () => this.marketResearch.execute(idea),
       'competitorAnalysis': () => this.competitorAnalysis.execute(idea),
       'mvpPlan': () => this.mvpGenerator.execute(idea),
