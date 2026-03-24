@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   LayoutDashboard, TrendingUp, Users, Globe, Briefcase, Cpu,
   AlertTriangle, Map, DollarSign, Palette, Eye, ChevronDown,
-  ChevronRight, Sparkles, LogOut, MessageCircle
+  ChevronRight, Sparkles, LogOut, MessageCircle, Lock
 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
@@ -14,6 +14,7 @@ interface SidebarSection {
   id: string
   label: string
   icon: React.ReactNode
+  pro?: boolean
   children?: { id: string; label: string; icon: React.ReactNode }[]
 }
 
@@ -34,6 +35,7 @@ const SECTIONS: SidebarSection[] = [
   { id: 'brand', label: 'Brand', icon: <Palette className="w-4 h-4" /> },
   { id: 'vision', label: 'Vision & Mission', icon: <Eye className="w-4 h-4" /> },
   { id: 'budget', label: 'Budget', icon: <DollarSign className="w-4 h-4" /> },
+  { id: 'financial-plan', label: 'Financial Plan', icon: <DollarSign className="w-4 h-4" />, pro: true },
 ]
 
 interface SidebarProps {
@@ -144,15 +146,23 @@ export default function Sidebar({ analysis, activeSection, onSectionClick, onCha
           return (
             <button
               key={section.id}
-              onClick={() => onSectionClick(section.id)}
+              onClick={() => !section.pro && onSectionClick(section.id)}
+              disabled={section.pro}
               className={`flex items-center gap-2 w-full px-2 py-2 rounded-lg text-sm transition ${
-                isActive(section.id)
+                section.pro
+                  ? 'text-gray-600 cursor-not-allowed opacity-60'
+                  : isActive(section.id)
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
               {section.icon}
-              {section.label}
+              <span className="flex-1 text-left">{section.label}</span>
+              {section.pro && (
+                <span className="flex items-center gap-1 text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-full">
+                  <Lock className="w-2.5 h-2.5" /> PRO
+                </span>
+              )}
             </button>
           )
         })}

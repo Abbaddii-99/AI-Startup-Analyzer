@@ -66,6 +66,15 @@ export class AnalysisController {
     return this.analysisService.retryAnalysis(id, req.user.userId);
   }
 
+  @Post(':id/regenerate/:section')
+  async regenerate(
+    @Request() req,
+    @Param('id') id: string,
+    @Param('section') section: string,
+  ): Promise<any> {
+    return this.analysisService.regenerateSection(id, req.user.userId, section);
+  }
+
   @Get(':id/progress')
   async getProgress(@Request() req, @Param('id') id: string): Promise<any> {
     return this.analysisService.getAnalysisProgress(id, req.user.userId);

@@ -13,12 +13,14 @@ import CompetitorCards from '@/components/CompetitorCards'
 import TargetAudienceCards from '@/components/TargetAudienceCards'
 import MarketSizeVisual from '@/components/MarketSizeVisual'
 import VisionMission from '@/components/VisionMission'
+import MvpPlan from '@/components/MvpPlan'
 import BrandIdentity from '@/components/BrandIdentity'
 import BudgetEstimator from '@/components/BudgetEstimator'
+import SectionPagination from '@/components/SectionPagination'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
-  CheckCircle, AlertTriangle, Lightbulb, Send, MessageCircle
+  CheckCircle, AlertTriangle, Lightbulb, Send, MessageCircle, RefreshCw
 } from 'lucide-react'
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -43,6 +45,19 @@ const SECTION_IDS = [
   'mvp', 'business-model', 'risks', 'roadmap', 'brand', 'vision', 'budget',
 ]
 
+const SECTION_TO_API_STATIC: Record<string, string> = {
+  'target-audience': 'idea-analysis',
+  'market-size': 'market-research',
+  'competitors': 'competitor-analysis',
+  'mvp': 'mvp',
+  'business-model': 'business-model',
+  'risks': 'risk-radar',
+  'roadmap': 'roadmap',
+  'brand': 'brand-identity',
+  'vision': 'vision-mission',
+  'budget': 'budget',
+}
+
 export default function AnalysisPage() {
   const params = useParams()
   const router = useRouter()
@@ -57,6 +72,7 @@ export default function AnalysisPage() {
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const reportRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
@@ -148,6 +164,30 @@ export default function AnalysisPage() {
     navigator.clipboard.writeText(window.location.href)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const SECTION_TO_API: Record<string, string> = {
+    'target-audience': 'idea-analysis',
+    'market-size': 'market-research',
+    'competitors': 'competitor-analysis',
+    'mvp': 'mvp',
+    'business-model': 'business-model',
+    'risks': 'risk-radar',
+    'roadmap': 'roadmap',
+    'brand': 'brand-identity',
+    'vision': 'vision-mission',
+    'budget': 'budget',
+  }
+
+  const regenerateSection = async () => {
+    const apiSection = SECTION_TO_API[activeSection]
+    if (!apiSection || regenerating) return
+    setRegenerating(true)
+    try {
+      const { data } = await api.post(`/analysis/${params.id}/regenerate/${apiSection}`)
+      setAnalysis((prev: any) => ({ ...prev, ...data }))
+    } catch {}
+    finally { setRegenerating(false) }
   }
 
   const sendChat = async () => {
@@ -251,6 +291,16 @@ export default function AnalysisPage() {
         <header className="bg-white border-b px-6 py-3 flex items-center justify-between shrink-0 z-10">
           <div className="text-sm text-gray-500 capitalize">{activeSection.replace(/-/g, ' ')}</div>
           <div className="flex items-center gap-2">
+            {SECTION_TO_API_STATIC[activeSection] && (
+              <button
+                onClick={regenerateSection}
+                disabled={regenerating}
+                className="flex items-center gap-2 border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${regenerating ? 'animate-spin' : ''}`} />
+                {regenerating ? 'جاري...' : 'تجديد'}
+              </button>
+            )}
             <button onClick={shareLink} className="flex items-center gap-2 border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition">
               <Share2 className="w-4 h-4" />
               {copied ? 'Copied!' : 'Share'}
@@ -358,6 +408,7 @@ export default function AnalysisPage() {
               <section id="target-audience" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <TargetAudienceCards data={analysis.ideaAnalysis} />
+                  <SectionPagination currentSection="target-audience" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -367,6 +418,7 @@ export default function AnalysisPage() {
               <section id="market-size" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <MarketSizeVisual data={analysis.marketResearch} />
+                  <SectionPagination currentSection="market-size" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -376,6 +428,7 @@ export default function AnalysisPage() {
               <section id="competitors" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <CompetitorCards data={analysis.competitorAnalysis} />
+                  <SectionPagination currentSection="competitors" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -383,10 +436,8 @@ export default function AnalysisPage() {
             {/* MVP */}
             <section id="mvp" className="scroll-mt-4">
               <div className="bg-white p-6 rounded-xl border shadow-sm">
-                <h3 className="font-bold mb-3 flex items-center gap-2">🚀 MVP Plan</h3>
-                <div className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
-                  <ReactMarkdown>{renderVal(report.mvp)}</ReactMarkdown>
-                </div>
+                <MvpPlan data={analysis.mvpPlan} />
+                <SectionPagination currentSection="mvp" onNavigate={scrollToSection} />
               </div>
             </section>
 
@@ -395,6 +446,7 @@ export default function AnalysisPage() {
               <section id="business-model" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <BusinessModel data={analysis.businessModel} />
+                  <SectionPagination currentSection="business-model" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -416,6 +468,7 @@ export default function AnalysisPage() {
                   <RiskRadar data={analysis.riskRadar} />
                 </div>
               )}
+              <SectionPagination currentSection="risks" onNavigate={scrollToSection} />
             </section>
 
             {/* ROADMAP */}
@@ -423,6 +476,7 @@ export default function AnalysisPage() {
               <section id="roadmap" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <Roadmap data={analysis.roadmap} />
+                  <SectionPagination currentSection="roadmap" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -432,6 +486,7 @@ export default function AnalysisPage() {
               <section id="brand" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <BrandIdentity data={analysis.brandIdentity} />
+                  <SectionPagination currentSection="brand" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -441,6 +496,7 @@ export default function AnalysisPage() {
               <section id="vision" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
                   <VisionMission data={analysis.visionMission} />
+                  <SectionPagination currentSection="vision" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
@@ -451,6 +507,7 @@ export default function AnalysisPage() {
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 shadow-sm">
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">💰 Budget Estimator</h2>
                   <BudgetEstimator data={analysis.budgetEstimate} />
+                  <SectionPagination currentSection="budget" onNavigate={scrollToSection} />
                 </div>
               </section>
             )}
