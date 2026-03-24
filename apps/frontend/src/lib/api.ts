@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AnalysisResult, IdeaAnalysis } from '@ai-startup-analyzer/shared/src/types/analysis.types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -18,12 +19,13 @@ api.interceptors.request.use((config) => {
 
 export default api;
 
-export const getAnalysis = async (id: string): Promise<AnalysisDto> => {
+export const getAnalysis = async (id: string): Promise<AnalysisResult> => {
   const response = await fetch(`/api/analysis/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch analysis');
   }
-  return response.json();
+  const data = await response.json();
+  return data as AnalysisResult;
 };
 
 export const getIdeaAnalysis = async (id: string): Promise<IdeaAnalysis | null> => {
@@ -31,5 +33,5 @@ export const getIdeaAnalysis = async (id: string): Promise<IdeaAnalysis | null> 
   if (!response.ok) {
     throw new Error('Failed to fetch idea analysis');
   }
-  return response.json();
+  return response.json() as Promise<IdeaAnalysis | null>;
 };
