@@ -47,7 +47,7 @@ export class IdeaAnalyzerAgent implements AgentInterface {
       await this.prisma.analysis.update({
         where: { id: analysisId },
         data: {
-          ideaAnalysis: analysisResult,
+          comprehensiveIdeaAnalysis: analysisResult,
           status: AnalysisStatus.COMPLETED,
           completedAt: new Date(),
         },

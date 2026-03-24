@@ -3,6 +3,7 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { prisma } from '../prisma';
 import { IdeaAnalyzerAgent } from '../agents/idea-analyzer.agent';
+import { ComprehensiveIdeaAnalyzerAgent } from '../agents/comprehensive-idea-analyzer.agent';
 import { MarketResearchAgent } from '../agents/market-research.agent';
 import { CompetitorAnalysisAgent } from '../agents/competitor-analysis.agent';
 import { MVPGeneratorAgent } from '../agents/mvp-generator.agent';
@@ -34,6 +35,7 @@ export class AnalysisProcessor extends WorkerHost {
 
   constructor(
     private ideaAnalyzer: IdeaAnalyzerAgent,
+    private comprehensiveIdeaAnalyzer: ComprehensiveIdeaAnalyzerAgent,
     private marketResearch: MarketResearchAgent,
     private competitorAnalysis: CompetitorAnalysisAgent,
     private mvpGenerator: MVPGeneratorAgent,
@@ -76,6 +78,9 @@ export class AnalysisProcessor extends WorkerHost {
         this.budgetEstimator.execute(idea, agentResults),
       ]);
       await job.updateProgress(98);
+
+      // Run comprehensive idea analysis after all other agents
+      await this.comprehensiveIdeaAnalyzer.process(analysisId);
 
       await prisma.analysis.update({
         where: { id: analysisId },

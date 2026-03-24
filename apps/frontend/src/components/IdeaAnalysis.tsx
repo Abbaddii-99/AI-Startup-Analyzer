@@ -1,58 +1,8 @@
 import React from 'react';
+import { ComprehensiveIdeaAnalysis } from '@ai-startup-analyzer/shared';
 
 interface IdeaAnalysisProps {
-  analysis: {
-    overallViability: {
-      score: number;
-      assessment: string;
-      strengths: string[];
-      weaknesses: string[];
-    };
-    marketOpportunity: {
-      score: number;
-      assessment: string;
-      marketSize: string;
-      growthPotential: string;
-      timing: string;
-    };
-    competitiveAnalysis: {
-      score: number;
-      assessment: string;
-      competitiveAdvantage: string;
-      barriersToEntry: string;
-      differentiation: string[];
-    };
-    targetAudienceFit: {
-      score: number;
-      assessment: string;
-      audienceUnderstanding: string;
-      painPointsAddressed: string[];
-      valueProposition: string;
-    };
-    financialFeasibility: {
-      score: number;
-      assessment: string;
-      revenuePotential: string;
-      costStructure: string;
-      breakEvenAnalysis: string;
-      roiPotential: string;
-    };
-    riskAssessment: {
-      score: number;
-      assessment: string;
-      highRiskFactors: string[];
-      mitigationStrategies: string[];
-      probabilityOfSuccess: string;
-    };
-    recommendations: {
-      priority: string[];
-      quickWins: string[];
-      longTermStrategies: string[];
-      assessment: string;
-    };
-    finalScore: number;
-    detailedAnalysis: string;
-  };
+  analysis: ComprehensiveIdeaAnalysis;
 }
 
 const IdeaAnalysis: React.FC<IdeaAnalysisProps> = ({ analysis }) => {

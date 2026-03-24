@@ -51,19 +51,20 @@ model Analysis {
   parentId  String?
 
   // Agent Results
-  ideaAnalysis       Json?
-  marketResearch     Json?
-  competitorAnalysis Json?
-  mvpPlan            Json?
-  monetization       Json?
-  goToMarket         Json?
-  finalReport        Json?
-  riskRadar          Json?
-  roadmap            Json?
-  businessModel      Json?
-  visionMission      Json?
-  brandIdentity      Json?
-  budgetEstimate     Json?
+  ideaAnalysis            Json?
+  comprehensiveIdeaAnalysis Json?
+  marketResearch          Json?
+  competitorAnalysis      Json?
+  mvpPlan                 Json?
+  monetization            Json?
+  goToMarket              Json?
+  finalReport             Json?
+  riskRadar               Json?
+  roadmap                 Json?
+  businessModel           Json?
+  visionMission           Json?
+  brandIdentity           Json?
+  budgetEstimate          Json?
 
   // Scoring
   marketDemandScore        Float?

@@ -17,6 +17,7 @@ import MvpPlan from '@/components/MvpPlan'
 import BrandIdentity from '@/components/BrandIdentity'
 import BudgetEstimator from '@/components/BudgetEstimator'
 import SectionPagination from '@/components/SectionPagination'
+import IdeaAnalysis from '@/components/IdeaAnalysis'
 import ReactMarkdown from 'react-markdown'
 import {
   Loader2, TrendingUp, Users, DollarSign, Zap, Download, Share2,
@@ -403,11 +404,14 @@ export default function AnalysisPage() {
               </h2>
             </section>
 
-            {/* TARGET AUDIENCE */}
-            {analysis.ideaAnalysis && (
+            {/* COMPREHENSIVE IDEA ANALYSIS */}
+            {analysis.comprehensiveIdeaAnalysis && (
               <section id="target-audience" className="scroll-mt-4">
                 <div className="bg-white p-6 rounded-xl border shadow-sm">
-                  <TargetAudienceCards data={analysis.ideaAnalysis} />
+                  <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-yellow-500" /> Comprehensive Idea Analysis
+                  </h2>
+                  <IdeaAnalysis analysis={analysis.comprehensiveIdeaAnalysis} />
                   <SectionPagination currentSection="target-audience" onNavigate={scrollToSection} />
                 </div>
               </section>
