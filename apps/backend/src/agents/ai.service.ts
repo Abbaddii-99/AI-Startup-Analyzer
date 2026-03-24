@@ -34,7 +34,12 @@ export class AIService {
         lazyConnect: true,
       });
     } catch (err) {
-      this.logger.warn(`Redis unavailable, caching disabled: ${err.message}`);
+  if (err instanceof Error) {
+    this.logger.warn(`Redis unavailable, caching disabled: ${err.message}`);
+  } else {
+    this.logger.warn(`Redis unavailable, caching disabled: ${String(err)}`);
+  }
+}
       this.redis = null;
     }
   }
