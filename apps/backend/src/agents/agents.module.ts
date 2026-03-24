@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AIService } from './ai.service';
 import { IdeaAnalyzerAgent } from './idea-analyzer.agent';
+import { ComprehensiveIdeaAnalyzerAgent } from './comprehensive-idea-analyzer.agent';
 import { MarketResearchAgent } from './market-research.agent';
 import { CompetitorAnalysisAgent } from './competitor-analysis.agent';
 import { MVPGeneratorAgent } from './mvp-generator.agent';
@@ -19,6 +20,7 @@ import { FinancialPlanAgent } from './financial-plan.agent';
   providers: [
     AIService,
     IdeaAnalyzerAgent,
+    ComprehensiveIdeaAnalyzerAgent,
     MarketResearchAgent,
     CompetitorAnalysisAgent,
     MVPGeneratorAgent,
@@ -36,6 +38,7 @@ import { FinancialPlanAgent } from './financial-plan.agent';
   exports: [
     AIService,
     IdeaAnalyzerAgent,
+    ComprehensiveIdeaAnalyzerAgent,
     MarketResearchAgent,
     CompetitorAnalysisAgent,
     MVPGeneratorAgent,
