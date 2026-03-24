@@ -1,1 +1,1 @@
-export * from './analysis.types.js';
+export * from './types/analysis.types';
