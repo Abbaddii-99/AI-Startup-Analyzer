@@ -52,13 +52,13 @@ export class AnalysisController {
   }
 
   @Get(':id')
-  async getAnalysis(@Param('id') id: string): Promise<AnalysisDto> {
-    return this.analysisService.getAnalysis(id);
+  async getAnalysis(@Request() req, @Param('id') id: string): Promise<any> {
+    return this.analysisService.getAnalysis(id, req.user.userId);
   }
 
   @Get(':id/idea-analysis')
-  async getIdeaAnalysis(@Param('id') id: string): Promise<IdeaAnalysis | null> {
-    const analysis = await this.analysisService.getAnalysis(id);
+  async getIdeaAnalysis(@Request() req, @Param('id') id: string): Promise<any> {
+    const analysis = await this.analysisService.getAnalysis(id, req.user.userId);
     return analysis.ideaAnalysis || null;
   }
 

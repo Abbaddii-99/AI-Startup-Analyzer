@@ -80,7 +80,7 @@ export class AnalysisProcessor extends WorkerHost {
       await job.updateProgress(98);
 
       // Run comprehensive idea analysis after all other agents
-      await this.comprehensiveIdeaAnalyzer.process(analysisId);
+      const comprehensiveResult = await this.comprehensiveIdeaAnalyzer.execute(idea, agentResults);
 
       await prisma.analysis.update({
         where: { id: analysisId },
