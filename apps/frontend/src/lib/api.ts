@@ -17,3 +17,19 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+
+export const getAnalysis = async (id: string): Promise<AnalysisDto> => {
+  const response = await fetch(`/api/analysis/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch analysis');
+  }
+  return response.json();
+};
+
+export const getIdeaAnalysis = async (id: string): Promise<IdeaAnalysis | null> => {
+  const response = await fetch(`/api/analysis/${id}/idea-analysis`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch idea analysis');
+  }
+  return response.json();
+};
