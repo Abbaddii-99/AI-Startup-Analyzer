@@ -9,8 +9,6 @@ const nextConfig = {
   future: {
     webpack5: true,
   },
-  // Optimize for older CPUs
-  swcMinify: true,
   // Disable some features that might cause issues
   images: {
     unoptimized: true,
