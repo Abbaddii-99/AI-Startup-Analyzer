@@ -169,8 +169,8 @@ importers:
         specifier: ^1.4.1
         version: 1.4.1
       jspdf:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: ^4.2.1
+        version: 4.2.1
       lucide-react:
         specifier: ^0.309.0
         version: 0.309.0(react@19.2.4)
@@ -578,8 +578,8 @@ packages:
       '@babel/helper-plugin-utils': 7.28.6
     dev: true
 
-  /@babel/runtime@7.28.6:
-    resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
+  /@babel/runtime@7.29.2:
+    resolution: {integrity: sha512-JiDShH45zKHWyGe4ZNVRrCjBz8Nh9TMmZG1kh4QTK8hCBTWBi8Da+i7s1fJw7/lYpM4ccepSNfqzZ/QvABBi5g==}
     engines: {node: '>=6.9.0'}
     dev: false
 
@@ -3596,7 +3596,7 @@ packages:
     engines: {node: '>=10.0.0'}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@types/raf': 3.4.3
       core-js: 3.49.0
       raf: 3.4.1
@@ -6994,10 +6994,10 @@ packages:
       semver: 7.7.4
     dev: false
 
-  /jspdf@4.2.0:
-    resolution: {integrity: sha512-hR/hnRevAXXlrjeqU5oahOE+Ln9ORJUB5brLHHqH67A+RBQZuFr5GkbI9XQI8OUFSEezKegsi45QRpc4bGj75Q==}
+  /jspdf@4.2.1:
+    resolution: {integrity: sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ==}
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       fast-png: 6.4.0
       fflate: 0.8.2
     optionalDependencies:
@@ -7743,7 +7743,7 @@ packages:
     resolution: {integrity: sha512-9PUmy2JxIOGgAaVHvgVYX21nVAo3o/+wJckTTF/YTLGAqB+nm+44buxRzaXxVk7qXRwbCNfE8c8mlGVNh7vB1g==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7755,7 +7755,7 @@ packages:
     resolution: {integrity: sha512-34AwX70/7NkRIajPsa5j6NySRiNrlLatTKhiLwTVFiVtrEFlfCcbeMNmdVixI3Ldvs8209ZC6euaAnXDRyR1zw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7767,7 +7767,7 @@ packages:
     resolution: {integrity: sha512-ZsWMI0j7EcFCMqbqdVwMWhmsVc03FhmypWXokKopGhwySn4IAB4AOURonRmFrO7k6sDeQ+iJ9QtTu7jA+S8wmg==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7779,7 +7779,7 @@ packages:
     resolution: {integrity: sha512-wY4g1CHCOoVSZuar7CLFon/qkPbICu71IT+6pa4BDwkAiaAMAemZPyy+a+iIUgdc8kHgSuHGsGf6PQzBSMWRZA==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7792,7 +7792,7 @@ packages:
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       chokidar: 3.6.0
       glob: 10.4.5
       html-minifier: 4.0.0
@@ -7813,7 +7813,7 @@ packages:
     resolution: {integrity: sha512-0QZ1whxbHUmJaRT8tW+wmr3fWZ/kpsHKAd24c7Z/N1Otm/U2G0T/FFEFJ6cB25X6ZN0K40QZ8L9gdLfiSVuRbA==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7825,7 +7825,7 @@ packages:
     resolution: {integrity: sha512-yey72LszXvIo5p0R6DB+YU8er/nP2wPsqpLKQCB0H8vG0WRT1sbSUvnCUOkKGn7subuyWDTdzHKbQO3XYIOmvg==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       cheerio: 1.0.0-rc.12
       detect-node: 2.1.0
       html-minifier: 4.0.0
@@ -7844,7 +7844,7 @@ packages:
     resolution: {integrity: sha512-FmGUVJqi4RYroh7y85vDx0aUKZgECkxHtMQ4pkLGQbZ2g93/Qt0Ek88DVCNJ5XwUAQQkE/TvrGMLHp3CIqpQ9Q==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7856,7 +7856,7 @@ packages:
     resolution: {integrity: sha512-28ABkXsKljBqj7XCC8GkQ94xz8HEU2XTyD+9LTlkDafzGp/MGJb8DcLh/7IkxCwqkQWyeMiDNLf1djsQ909Vxw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7868,7 +7868,7 @@ packages:
     resolution: {integrity: sha512-nLzix1wrMnojE0RPGhk4iKqSRwHKjie2EPzgKT7CDzfqN+Ref03E5Q19x3cQTLgxvq3C3CnvCQBfnhoS3Eakug==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7880,7 +7880,7 @@ packages:
     resolution: {integrity: sha512-k6rwff+7i+vTQYJ/CjBfE20qNqPaW60IRH2x2oEPuCzmwDmoVWOcplJIuotSqIAdfwF9hLkICknisp1BpczVlQ==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7892,7 +7892,7 @@ packages:
     resolution: {integrity: sha512-ao8HB5nf+Dmxw4GO6lMMOlnj1lNZONai0GC9RobrZgPlghZw6hpURWGpkON7pQcy6XnOHwYwkV7Go/npzA2i7w==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7904,7 +7904,7 @@ packages:
     resolution: {integrity: sha512-xaQE1rthe0RrNotwEr71X1tE+QQ489Yc0ynMm3oNMrohDI/TaCeazx8GAHPMM7VLduDA8D4A5wkZ6PuEvlJu4w==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7916,7 +7916,7 @@ packages:
     resolution: {integrity: sha512-2JvYqhbLyU/+Te6/1AXxzTNoHYCDYhXOVZP7wMvU4t7K34pXqyRUNO405atyHUY1MRafrl6RJ8cIx0x5vUX7PA==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7928,7 +7928,7 @@ packages:
     resolution: {integrity: sha512-nEwDHkAqY3Fm7QWeAZc/a7MakZpXh6THfrE8/AWrfpgzTHrD/wihNUc09ztNpr6z/K1+JWgQfSF2BRc+X3P46g==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7940,7 +7940,7 @@ packages:
     resolution: {integrity: sha512-0Hm8o50rPMUQLSCOOa4D4pz9NajmCDccLvBYE4fwKdeUXjSJ6bwAYeMpveel8oNZMDUVJ4Hx+PskisEGHMHM2w==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7952,7 +7952,7 @@ packages:
     resolution: {integrity: sha512-DS0adpIAsVMDIk2DOsHzjg+RNjQU0fF8jiVP9BmdRHVGrLPmpL9wIHZk2KvsKvZe7VaXXBijFt3DZ5/CQ/+D7Q==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7964,7 +7964,7 @@ packages:
     resolution: {integrity: sha512-rujm0ROM4QGWw77vnl3NaVaCKXrT4xTSHeAnkHKiY5AuRf6HPTgEtutq5pdel/y6Q9GrmxvN3HRESum7tpJCJw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7976,7 +7976,7 @@ packages:
     resolution: {integrity: sha512-e09NkoYwvzMcTv7V6H5doWD6Te2E1y2EvOLQJoXKVdQpDwyBWGdfnZke0scJGdA58HLAB+0mLYogpLwmfLaP5Q==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -7989,7 +7989,7 @@ packages:
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       js-beautify: 1.15.4
       lodash: 4.17.23
       mjml-core: 4.18.0
@@ -8004,7 +8004,7 @@ packages:
     resolution: {integrity: sha512-uho/MS2tfNAe+V9u2X7NoCco34MDbdp30ETA8009Qo1VCP/D8lZ+s69WGRPu6hvN/Y2pzBgZly++CMg3qFZqBQ==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8016,7 +8016,7 @@ packages:
     resolution: {integrity: sha512-sHSsZg4afY1heThuJzxa1Kvfh/QzB7/9P5fFUHeVnnxb07ZTXnhXWA6YbobdND5/l9+5yjN5/UgqDZm3tIT4Uw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       detect-node: 2.1.0
       htmlparser2: 9.1.0
       lodash: 4.17.23
@@ -8027,7 +8027,7 @@ packages:
     resolution: {integrity: sha512-x3l8vMVtsaqM/jauMeZIN7HFD2t5A28J4U0o4849yIlRxiWguLFV5l3BL8Byol+YLkoLuT9PjaZs9RYv+FGfeg==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       mjml-accordion: 4.18.0
       mjml-body: 4.18.0
       mjml-button: 4.18.0
@@ -8062,7 +8062,7 @@ packages:
     resolution: {integrity: sha512-F/kViAwXm3ccPP52kw++/mHQbcYbYYxC8JH15TZxH8GLVZkX5CGKgcBrHhDK7WoIlfEIsVRZ6IZdlHjH8vgyxw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8074,7 +8074,7 @@ packages:
     resolution: {integrity: sha512-bB8My9zvIEkTOxej+TrjEeaeRT0lsypGeRADtdrRZXeqUClkkuCnCXlsNKSLGT8ZRqjUqWRc5z8ubDOvGk2+Gg==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8086,7 +8086,7 @@ packages:
     resolution: {integrity: sha512-iAQc9g59L6L3VHDd55BxeIvk/zHkxflxmvuyYyOOvpmmKAvUBC//ULfpxiiM4yupofsThqFfrO+wc8d4kTRkbQ==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8098,7 +8098,7 @@ packages:
     resolution: {integrity: sha512-FK/0f5IBiONgaRpwNBs7G8EbLdAbmYqcIfHR8O8tP4LipAChLQKHO9vX3vrRMGLBZZNTESLObcFSVWmA40Mfpw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8110,7 +8110,7 @@ packages:
     resolution: {integrity: sha512-vJysCPUL3CHcsQDAFpW+skzBtY0RYsmMBYswI4WX0B05GLKlOjXqpYOwcmAupWeGoBVL5r/t28ynu2PqnOlN3w==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8122,7 +8122,7 @@ packages:
     resolution: {integrity: sha512-hBLmF3JgveUKktKQFWHqHAr7qr92j1CxAvq7mtpDUgiWgyPFzqRX8mUsFYgZ7DmRxG4UE+Kzpt8/YFd9+E98lw==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
     transitivePeerDependencies:
@@ -8134,7 +8134,7 @@ packages:
     resolution: {integrity: sha512-JmpWAsNTUlAxJOz2zHYfF8Vod8OzM3Qp5JXtrVw5tivZQzq88ZfqVGuqsas51z0pp1/ilfD4lC17YGfGwKGyhA==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
     dev: false
     optional: true
 
@@ -8142,7 +8142,7 @@ packages:
     resolution: {integrity: sha512-TZeOvLjIhXEK60rjWNiYhEYNlv5GKYahE+96ifcT5OGkWkRA0DsQDfp+6VI32OS5VxsfKq2h/UdERPlQijjpAQ==}
     requiresBuild: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       lodash: 4.17.23
       mjml-core: 4.18.0
       mjml-section: 4.18.0
@@ -8155,7 +8155,7 @@ packages:
     resolution: {integrity: sha512-rQM4aqFRrNvV1k733e8hJSopBjZvoSdBpRYzNTMAN+As0jqJsO5eN0wTT2IFtfe4PREzzu5b06RkPiUQdd0IIg==}
     hasBin: true
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       mjml-cli: 4.18.0
       mjml-core: 4.18.0
       mjml-migrate: 4.18.0
