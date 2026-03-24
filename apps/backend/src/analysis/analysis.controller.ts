@@ -52,8 +52,14 @@ export class AnalysisController {
   }
 
   @Get(':id')
-  async getOne(@Request() req, @Param('id') id: string): Promise<any> {
-    return this.analysisService.getAnalysis(id, req.user.userId);
+  async getAnalysis(@Param('id') id: string): Promise<AnalysisDto> {
+    return this.analysisService.getAnalysis(id);
+  }
+
+  @Get(':id/idea-analysis')
+  async getIdeaAnalysis(@Param('id') id: string): Promise<IdeaAnalysis | null> {
+    const analysis = await this.analysisService.getAnalysis(id);
+    return analysis.ideaAnalysis || null;
   }
 
   @Delete(':id')
