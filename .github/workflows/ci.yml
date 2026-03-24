@@ -11,20 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: ai_analyzer_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
       redis:
         image: redis:7-alpine
         options: >-
@@ -56,16 +42,16 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/ai_analyzer_test
+          DATABASE_URL: "file:./packages/db/prisma/dev.db"
 
-      - name: Run migrations
-        run: pnpm --filter @ai-analyzer/db exec prisma migrate deploy
+      - name: Setup database
+        run: pnpm --filter @ai-analyzer/db exec prisma db push
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/ai_analyzer_test
+          DATABASE_URL: "file:./packages/db/prisma/dev.db"
 
       - name: Test
         run: pnpm test --passWithNoTests || true
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/ai_analyzer_test
+          DATABASE_URL: "file:./packages/db/prisma/dev.db"
           REDIS_HOST: localhost
           REDIS_PORT: 6379
