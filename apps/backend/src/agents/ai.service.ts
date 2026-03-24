@@ -34,12 +34,13 @@ export class AIService {
         lazyConnect: true,
       });
     } catch (err) {
-  if (err instanceof Error) {
-    this.logger.warn(`Redis unavailable, caching disabled: ${err.message}`);
-  } else {
-    this.logger.warn(`Redis unavailable, caching disabled: ${String(err)}`);
+      if (err instanceof Error) {
+        this.logger.warn(`Redis unavailable, caching disabled: ${err.message}`);
+      } else {
+        this.logger.warn(`Redis unavailable, caching disabled: ${String(err)}`);
+      }
+    }
   }
-}
 
   private cacheKey(prompt: string): string {
     return `ai:cache:${createHash('sha256').update(prompt).digest('hex')}`;
@@ -78,8 +79,8 @@ export class AIService {
 
         return result;
       } catch (error) {
-        lastError = error;
-        this.logger.warn(`AI generate attempt ${attempt}/${MAX_RETRIES} failed: ${error.message}`);
+        lastError = error as Error;
+        this.logger.warn(`AI generate attempt ${attempt}/${MAX_RETRIES} failed: ${lastError.message}`);
         if (attempt < MAX_RETRIES) await this.sleep(RETRY_DELAY_MS * attempt);
       }
     }
@@ -105,29 +106,22 @@ export class AIService {
   parseJSON<T>(text: string): T {
     const candidates: string[] = [];
 
-    // 1. ```json ... ``` block
     const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (fenceMatch) candidates.push(fenceMatch[1].trim());
 
-    // 2. First { ... } or [ ... ] block
     const objectMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
     if (objectMatch) candidates.push(objectMatch[1]);
 
-    // 3. Whole text
     candidates.push(text.trim());
 
     for (const raw of candidates) {
-      // Direct parse
       try { return JSON.parse(raw); } catch { /* continue */ }
 
-      // Remove trailing commas then parse
       try {
         const noTrailing = raw.replace(/,\s*([}\]])/g, '$1');
         return JSON.parse(noTrailing);
       } catch { /* continue */ }
 
-      // Use JSON5-style: replace actual newlines/tabs inside the raw string
-      // by processing char by char to avoid breaking unicode
       try {
         let inString = false;
         let escaped = false;
@@ -147,7 +141,6 @@ export class AIService {
         return JSON.parse(result);
       } catch { /* continue */ }
 
-      // Both: char-by-char fix + trailing commas
       try {
         let inString = false;
         let escaped = false;
