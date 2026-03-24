@@ -1,1 +1,1 @@
-export * from './types/analysis.types';
+import { AnalysisResult, IdeaAnalysis } from './analysis.types';
