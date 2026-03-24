@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@ai-startup-analyzer/shared": [
+        "../../packages/shared/src"
       ]
     }
   },
