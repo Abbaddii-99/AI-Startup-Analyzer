@@ -28,10 +28,39 @@ export interface CompetitorAnalysis {
   indirectCompetitors: Competitor[];
 }
 
+export interface MVPFeature {
+  title: string;
+  description: string;
+  priority: 'Must Have' | 'Should Have' | 'Nice to Have';
+}
+
+export interface MVPFeedbackLoop {
+  title: string;
+  description: string;
+  method: string;
+}
+
+export interface MVPKPI {
+  title: string;
+  target: string;
+  description: string;
+  timeframe: string;
+}
+
+export interface MVPFeasibilityItem {
+  question: string;
+  answer: string;
+  risk: 'Low' | 'Medium' | 'High';
+}
+
 export interface MVPPlan {
-  coreFeatures: string[];
-  userFlow: string[];
-  systemArchitecture: string;
+  productName: string;
+  tagline: string;
+  coreFeatures: MVPFeature[];
+  feedbackLoops: MVPFeedbackLoop[];
+  kpis: MVPKPI[];
+  iterationStrategy: string;
+  feasibilityChecks: MVPFeasibilityItem[];
   developmentComplexity: 'Low' | 'Medium' | 'High';
   estimatedTime: string;
 }

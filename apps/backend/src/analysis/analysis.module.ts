@@ -12,5 +12,6 @@ import { AgentsModule } from '../agents/agents.module';
   ],
   controllers: [AnalysisController],
   providers: [AnalysisService, AnalysisProcessor],
+  exports: [AnalysisService],
 })
 export class AnalysisModule {}

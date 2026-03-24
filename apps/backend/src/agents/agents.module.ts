@@ -13,6 +13,7 @@ import { BusinessModelAgent } from './business-model.agent';
 import { VisionMissionAgent } from './vision-mission.agent';
 import { BrandIdentityAgent } from './brand-identity.agent';
 import { BudgetEstimatorAgent } from './budget-estimator.agent';
+import { FinancialPlanAgent } from './financial-plan.agent';
 
 @Module({
   providers: [
@@ -30,6 +31,7 @@ import { BudgetEstimatorAgent } from './budget-estimator.agent';
     VisionMissionAgent,
     BrandIdentityAgent,
     BudgetEstimatorAgent,
+    FinancialPlanAgent,
   ],
   exports: [
     AIService,
@@ -46,6 +48,7 @@ import { BudgetEstimatorAgent } from './budget-estimator.agent';
     VisionMissionAgent,
     BrandIdentityAgent,
     BudgetEstimatorAgent,
+    FinancialPlanAgent,
   ],
 })
 export class AgentsModule {}

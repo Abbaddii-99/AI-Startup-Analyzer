@@ -15,6 +15,7 @@ import { BusinessModelAgent } from '../agents/business-model.agent';
 import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
+import { FinancialPlanAgent } from '../agents/financial-plan.agent';
 
 function sanitizeIdea(idea: string): string {
   return idea

@@ -2,12 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
+export interface RoadmapTask {
+  title: string;
+  type: string;
+  role: string;
+}
+
 export interface RoadmapMilestone {
   phase: number;
   title: string;
   description: string;
   weeks: number;
-  tasks: string[];
+  tasks: RoadmapTask[];
   deliverable: string;
 }
 
@@ -38,17 +44,22 @@ Return ONLY valid JSON:
     {
       "phase": 1,
       "title": "Research & Planning",
-      "description": "brief description of what happens in this phase",
+      "description": "brief description",
       "weeks": 4,
-      "tasks": ["task 1", "task 2", "task 3"],
-      "deliverable": "main output of this phase"
+      "tasks": [
+        { "title": "Market research", "type": "بحث", "role": "مدير المنتج، باحث سوق" },
+        { "title": "Define MVP features", "type": "تخطيط", "role": "قائد فني، مدير المنتج" }
+      ],
+      "deliverable": "main output"
     },
     {
       "phase": 2,
       "title": "MVP Development",
       "description": "...",
       "weeks": 6,
-      "tasks": ["..."],
+      "tasks": [
+        { "title": "Build core features", "type": "تطوير", "role": "مهندس برمجيات، عالم بيانات" }
+      ],
       "deliverable": "..."
     },
     {
@@ -56,7 +67,9 @@ Return ONLY valid JSON:
       "title": "Launch Preparation",
       "description": "...",
       "weeks": 3,
-      "tasks": ["..."],
+      "tasks": [
+        { "title": "Prepare launch strategy", "type": "تسويق", "role": "مدير التسويق، مدير المنتج" }
+      ],
       "deliverable": "..."
     },
     {
@@ -64,13 +77,20 @@ Return ONLY valid JSON:
       "title": "Launch & Iterate",
       "description": "...",
       "weeks": 4,
-      "tasks": ["..."],
+      "tasks": [
+        { "title": "Track user adoption", "type": "تقييم", "role": "مدير المنتج، محلل بيانات" }
+      ],
       "deliverable": "..."
     }
   ],
   "totalWeeks": 17,
-  "summary": "one sentence overview of the roadmap"
-}`;
+  "summary": "one sentence overview"
+}
+
+Rules:
+- Each task must have title, type (one word category), and role (2 roles max separated by comma)
+- All text in the same language as the idea
+- 3-4 tasks per phase`;
 
     const response = await this.ai.generate(prompt);
     return this.ai.parseJSON<ProjectRoadmap>(response);

@@ -10,26 +10,41 @@ export class MVPGeneratorAgent implements Agent<MVPPlan> {
   async execute(idea: string): Promise<MVPPlan> {
     const prompt = `You are a startup product manager. Respond in the same language as the startup idea.
 
-Design the simplest MVP for this idea:
+Design a detailed MVP plan for this idea:
 
 ${wrapUserInput(idea)}
 
-Return:
-
-1. core features
-2. user flow
-3. basic system architecture
-4. development complexity (Low/Medium/High)
-5. estimated time to build
-
-Return JSON format:
+Return ONLY valid JSON in this exact format:
 {
-  "coreFeatures": ["..."],
-  "userFlow": ["..."],
-  "systemArchitecture": "...",
+  "productName": "short product name",
+  "tagline": "one-line description of what the product does",
+  "coreFeatures": [
+    { "title": "Feature name", "description": "What it does and why it matters", "priority": "Must Have" }
+  ],
+  "feedbackLoops": [
+    { "title": "Loop name", "description": "How this feedback loop works", "method": "in-app survey" }
+  ],
+  "kpis": [
+    { "title": "KPI name", "target": "> 100", "description": "What this measures", "timeframe": "Month 1" }
+  ],
+  "iterationStrategy": "How to improve the product based on feedback",
+  "feasibilityChecks": [
+    { "question": "Is X feasible?", "answer": "Yes because...", "risk": "Low" }
+  ],
+  "keyMilestones": [
+    { "week": "Week 2", "title": "Milestone title", "description": "What gets achieved" }
+  ],
   "developmentComplexity": "Medium",
-  "estimatedTime": "..."
-}`;
+  "estimatedTime": "3-4 months"
+}
+
+Rules:
+- coreFeatures: 4-6 items, mix of Must Have / Should Have / Nice to Have
+- feedbackLoops: exactly 4 items
+- kpis: exactly 4 items with specific numeric targets
+- feasibilityChecks: 4-5 critical questions about legal, data, tech, competition
+- keyMilestones: exactly 4 critical milestones with specific week numbers
+- All text in the same language as the idea`;
 
     const response = await this.ai.generate(prompt);
     return this.ai.parseJSON<MVPPlan>(response);

@@ -1,27 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    root: require('path').resolve(__dirname, '../..'),
+  experimental: {
+    // Disable Turbopack due to CPU compatibility issues
+    // Falls back to Webpack
+    disablePostcssPresetEnv: true,
   },
-  reactStrictMode: true,
-  // Disable build-time type checking — handled separately by tsc --noEmit
-  // Avoids jest-worker EPERM kill errors on Windows with Node.js v22
-  typescript: { ignoreBuildErrors: true },
-  // standalone is enabled in Docker via NEXT_OUTPUT=standalone env var
-  ...(process.env.NEXT_OUTPUT === 'standalone' && { output: 'standalone' }),
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        ],
-      },
-    ]
+  // Enable legacy webpack mode
+  future: {
+    webpack5: true,
   },
+  // Optimize for older CPUs
+  swcMinify: true,
+  // Disable some features that might cause issues
+  images: {
+    unoptimized: true,
+  },
+  // Reduce memory usage
+  productionBrowserSourceMaps: false,
 }
 
 module.exports = nextConfig
