@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -16,7 +16,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Subscription
-  plan            Plan     @default(FREE)
+  plan            String   @default("FREE")
   stripeCustomerId String?  @unique
   stripeSubId      String?  @unique
   analysesThisMonth Int     @default(0)
@@ -44,27 +44,27 @@ model Analysis {
   id        String         @id @default(cuid())
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  idea      String         @db.Text
-  status    AnalysisStatus @default(PENDING)
+  idea      String
+  status    String         @default("PENDING")
   isPublic  Boolean        @default(false)
   version   Int            @default(1)
   parentId  String?
 
   // Agent Results
-  ideaAnalysis            Json?
-  comprehensiveIdeaAnalysis Json?
-  marketResearch          Json?
-  competitorAnalysis      Json?
-  mvpPlan                 Json?
-  monetization            Json?
-  goToMarket              Json?
-  finalReport             Json?
-  riskRadar               Json?
-  roadmap                 Json?
-  businessModel           Json?
-  visionMission           Json?
-  brandIdentity           Json?
-  budgetEstimate          Json?
+  ideaAnalysis            String?
+  comprehensiveIdeaAnalysis String?
+  marketResearch          String?
+  competitorAnalysis      String?
+  mvpPlan                 String?
+  monetization            String?
+  goToMarket              String?
+  finalReport             String?
+  riskRadar               String?
+  roadmap                 String?
+  businessModel           String?
+  visionMission           String?
+  brandIdentity           String?
+  budgetEstimate          String?
 
   // Scoring
   marketDemandScore        Float?
@@ -82,15 +82,3 @@ model Analysis {
   @@index([isPublic])
 }
 
-enum AnalysisStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum Plan {
-  FREE
-  PRO
-  TEAM
-}
