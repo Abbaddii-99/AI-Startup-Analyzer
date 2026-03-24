@@ -40,9 +40,6 @@ export class AIService {
     this.logger.warn(`Redis unavailable, caching disabled: ${String(err)}`);
   }
 }
-      this.redis = null;
-    }
-  }
 
   private cacheKey(prompt: string): string {
     return `ai:cache:${createHash('sha256').update(prompt).digest('hex')}`;
