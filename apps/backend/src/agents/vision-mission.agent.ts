@@ -14,7 +14,7 @@ export interface VisionMission {
 export class VisionMissionAgent implements Agent<VisionMission> {
   constructor(private ai: AIService) {}
 
-  async execute(idea: string, context?: any): Promise<VisionMission> {
+  async execute(idea: string, _context?: any): Promise<VisionMission> {
     const prompt = `You are a startup branding strategist. Respond in the same language as the startup idea.
 
 Create Vision, Mission, and brand foundation for this startup. Keep ALL fields SHORT and concise.

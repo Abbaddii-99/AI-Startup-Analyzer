@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AgentInterface } from './agent.interface';
-import { prisma } from '../prisma';
-import { Analysis } from '@prisma/client';
 import { AIService } from './ai.service';
 
 @Injectable()
