@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: file:${{ github.workspace }}/packages/db/prisma/dev.db
 
     services:
       redis:
@@ -25,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
 
       - uses: actions/setup-node@v4
         with:
@@ -32,24 +36,21 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: pnpm lint
 
+      - name: Setup database
+        run: pnpm --filter @ai-analyzer/db run push
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+
       - name: Build
         run: pnpm build
-        env:
-          DATABASE_URL: "file:./packages/db/prisma/dev.db"
-
-      - name: Setup database
-        run: pnpm --filter @ai-analyzer/db exec prisma db push
-        env:
-          DATABASE_URL: "file:./packages/db/prisma/dev.db"
 
       - name: Test
-        run: pnpm test --passWithNoTests || true
+        run: pnpm test
         env:
-          DATABASE_URL: "file:./packages/db/prisma/dev.db"
           REDIS_HOST: localhost
           REDIS_PORT: 6379
