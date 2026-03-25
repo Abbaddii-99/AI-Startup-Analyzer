@@ -71,7 +71,13 @@ export class AnalysisService {
     }
 
     await prisma.user.update({ where: { id: userId }, data: { analysesThisMonth: { increment: 1 } } });
-    const analysis = await prisma.analysis.create({ data: { userId, idea, status: 'PENDING' } });
+    const analysis = await prisma.analysis.create({
+      data: {
+        user: { connect: { id: userId } },
+        idea,
+        status: 'PENDING',
+      },
+    });
 
     await this.analysisQueue.add('analyze', { analysisId: analysis.id, idea }, { jobId: analysis.id });
     return analysis;
