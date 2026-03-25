@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComprehensiveIdeaAnalysis } from '@ai-startup-analyzer/shared';
+import type { ComprehensiveIdeaAnalysis } from '@ai-analyzer/shared';
 
 interface IdeaAnalysisProps {
   analysis: ComprehensiveIdeaAnalysis;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AnalysisResult, IdeaAnalysis } from '@ai-startup-analyzer/shared/src/types/analysis.types';
+import type { AnalysisResult, IdeaAnalysis } from '@ai-analyzer/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
