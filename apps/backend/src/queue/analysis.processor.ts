@@ -16,7 +16,6 @@ import { BusinessModelAgent } from '../agents/business-model.agent';
 import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
-import { FinancialPlanAgent } from '../agents/financial-plan.agent';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -87,6 +86,7 @@ export class AnalysisProcessor extends WorkerHost {
         data: {
           status: 'COMPLETED',
           ideaAnalysis: agentResults.ideaAnalysis as any,
+          comprehensiveIdeaAnalysis: comprehensiveResult as any,
           marketResearch: agentResults.marketResearch as any,
           competitorAnalysis: agentResults.competitorAnalysis as any,
           mvpPlan: agentResults.mvpPlan as any,
