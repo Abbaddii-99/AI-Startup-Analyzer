@@ -6,7 +6,7 @@
     "build": "nest build",
     "start": "node -r tsconfig-paths/register dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
     "@ai-analyzer/db": "workspace:*",
