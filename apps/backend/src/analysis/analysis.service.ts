@@ -76,6 +76,8 @@ export class AnalysisService {
         user: { connect: { id: userId } },
         idea,
         status: 'PENDING',
+        // Keep compatibility across environments with different generated Prisma types.
+        ...({ content: '' } as Record<string, string>),
       },
     });
 
