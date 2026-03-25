@@ -45,6 +45,7 @@ model Analysis {
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   idea      String
+  content   String
   status    String         @default("PENDING")
   isPublic  Boolean        @default(false)
   version   Int            @default(1)
