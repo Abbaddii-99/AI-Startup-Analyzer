@@ -1,5 +1,5 @@
 // shared/src/index.ts
-
+export * from './utils/wrapUserInput';
 // صدّر كل الأنواع من ملفات الـ types
 export type { 
   IdeaAnalysis,
