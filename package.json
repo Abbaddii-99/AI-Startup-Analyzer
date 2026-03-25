@@ -24,5 +24,12 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "pnpm": {
+    "overrides": {
+      "lodash": "^4.17.23",
+      "multer": "^2.1.1",
+      "file-type": "^21.3.2"
+    }
+  }
 }
