@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#3f1d2e"/>
+  <rect x="40" y="40" width="1200" height="640" rx="18" fill="#6b2143" stroke="#f472b6"/>
+  <text x="80" y="110" fill="#fce7f3" font-family="Segoe UI, Arial, sans-serif" font-size="40" font-weight="700">Demo GIF Placeholder</text>
+  <text x="80" y="165" fill="#fbcfe8" font-family="Segoe UI, Arial, sans-serif" font-size="24">Replace with: assets/readme/demo.gif</text>
+</svg>
