@@ -17,12 +17,13 @@ export interface AdaptiveGroundingEvent {
   action: 'applied' | 'skipped';
   attemptNumber: number;
   reason: string;
-  reportHash: string;
+  sourceReportHash: string;
+  resultReportHash: string;
 }
 
 export interface AdaptiveGroundingOptions {
   attemptNumber?: number;
-  groundingFn?: (report: FinalReport) => GroundingResult;
+  groundingFn?: (report: FinalReport) => GroundingResult | Promise<GroundingResult>;
   onLog?: (event: AdaptiveGroundingEvent) => void;
 }
 
@@ -37,16 +38,90 @@ export function mockGroundFinalReport(report: FinalReport): GroundingResult {
   };
 }
 
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function clampScore(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  if (value < 0) return 0;
+  if (value > 10) return 10;
+  return Number(value.toFixed(2));
+}
+
+export async function groundFinalReport(report: FinalReport): Promise<GroundingResult> {
+  const groundedReport = cloneReport(report);
+  const operations: string[] = [];
+
+  const textFields: Array<keyof Omit<FinalReport, 'risks' | 'score'>> = [
+    'ideaSummary',
+    'problem',
+    'targetMarket',
+    'marketAnalysis',
+    'competitors',
+    'mvp',
+    'monetization',
+    'goToMarket',
+    'verdict',
+  ];
+
+  for (const field of textFields) {
+    const before = groundedReport[field];
+    const after = normalizeText(before);
+    if (before !== after) {
+      groundedReport[field] = after;
+      operations.push(`normalized:${field}`);
+    }
+  }
+
+  const risks = groundedReport.risks
+    .map((risk) => normalizeText(risk))
+    .filter((risk) => risk.length > 0);
+  const uniqueRisks = Array.from(new Set(risks));
+  if (uniqueRisks.length === 0) {
+    groundedReport.risks = ['Potential execution risk requires further validation.'];
+    operations.push('fallback:risks');
+  } else {
+    if (uniqueRisks.length !== groundedReport.risks.length) {
+      operations.push('normalized:risks');
+    }
+    groundedReport.risks = uniqueRisks;
+  }
+
+  const scoreFields: Array<keyof FinalReport['score']> = [
+    'marketDemand',
+    'competition',
+    'executionDifficulty',
+    'profitPotential',
+    'overall',
+  ];
+  for (const field of scoreFields) {
+    const before = groundedReport.score[field];
+    const after = clampScore(before);
+    if (before !== after) {
+      groundedReport.score[field] = after;
+      operations.push(`clamped:${field}`);
+    }
+  }
+
+  return {
+    groundedReport,
+    notes: operations.length > 0
+      ? `Applied adaptive grounding corrections: ${operations.join(', ')}`
+      : 'Adaptive grounding made no changes',
+  };
+}
+
 function hashReport(report: FinalReport): string {
   return createHash('sha256').update(JSON.stringify(report)).digest('hex');
 }
 
-export function adaptiveGroundingTrigger(
+export async function adaptiveGroundingTrigger(
   finalReportResult: FinalReportAgentResult,
   options: AdaptiveGroundingOptions = {},
-): FinalReportAdaptiveResult {
+): Promise<FinalReportAdaptiveResult> {
   const attemptNumber = options.attemptNumber ?? 1;
-  const reportHash = hashReport(finalReportResult.report);
+  const sourceReportHash = hashReport(finalReportResult.report);
   const onLog = options.onLog;
 
   if (!finalReportResult.quality.shouldGround) {
@@ -54,7 +129,8 @@ export function adaptiveGroundingTrigger(
       action: 'skipped',
       attemptNumber,
       reason: finalReportResult.quality.reason,
-      reportHash,
+      sourceReportHash,
+      resultReportHash: sourceReportHash,
     });
     return {
       report: finalReportResult.report,
@@ -62,15 +138,17 @@ export function adaptiveGroundingTrigger(
     };
   }
 
-  const groundingFn = options.groundingFn ?? mockGroundFinalReport;
-  const grounded = groundingFn(finalReportResult.report);
+  const groundingFn = options.groundingFn ?? groundFinalReport;
+  const grounded = await groundingFn(finalReportResult.report);
   const groundedReport = grounded.groundedReport ?? finalReportResult.report;
+  const resultReportHash = hashReport(groundedReport);
 
   onLog?.({
     action: 'applied',
     attemptNumber,
     reason: finalReportResult.quality.reason,
-    reportHash,
+    sourceReportHash,
+    resultReportHash,
   });
 
   return {

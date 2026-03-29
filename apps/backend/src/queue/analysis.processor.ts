@@ -77,11 +77,11 @@ export class AnalysisProcessor extends WorkerHost {
         this.brandIdentity.execute(idea, agentResults),
         this.budgetEstimator.execute(idea, agentResults),
       ]);
-      const adaptiveFinalReportResult = adaptiveGroundingTrigger(finalReportResult, {
+      const adaptiveFinalReportResult = await adaptiveGroundingTrigger(finalReportResult, {
         attemptNumber: 1,
         onLog: (event) => {
           this.logger.log(
-            `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.reportHash.slice(0, 12)}`,
+            `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.sourceReportHash.slice(0, 12)}=>${event.resultReportHash.slice(0, 12)}`,
           );
         },
       });

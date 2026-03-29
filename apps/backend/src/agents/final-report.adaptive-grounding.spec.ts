@@ -1,6 +1,6 @@
 import type { FinalReport } from '@ai-analyzer/shared';
 import type { FinalReportAgentResult } from './final-report.agent';
-import { adaptiveGroundingTrigger } from './final-report.adaptive-grounding';
+import { adaptiveGroundingTrigger, groundFinalReport } from './final-report.adaptive-grounding';
 
 function sampleReport(): FinalReport {
   return {
@@ -36,7 +36,7 @@ function sampleResult(overrides: Partial<FinalReportAgentResult> = {}): FinalRep
 }
 
 describe('adaptiveGroundingTrigger', () => {
-  it('applies grounding when shouldGround=true', () => {
+  it('applies grounding when shouldGround=true', async () => {
     const result = sampleResult({
       quality: {
         shouldGround: true,
@@ -44,7 +44,7 @@ describe('adaptiveGroundingTrigger', () => {
       },
     });
 
-    const adapted = adaptiveGroundingTrigger(result, {
+    const adapted = await adaptiveGroundingTrigger(result, {
       groundingFn: (report) => ({
         groundedReport: { ...report, verdict: `${report.verdict} (grounded)` },
         notes: 'grounded for demo',
@@ -57,19 +57,25 @@ describe('adaptiveGroundingTrigger', () => {
     expect(adapted.quality.reason).toContain('confidence below threshold');
   });
 
-  it('skips grounding when shouldGround=false', () => {
+  it('skips grounding when shouldGround=false', async () => {
     const result = sampleResult();
-    const adapted = adaptiveGroundingTrigger(result);
+    const adapted = await adaptiveGroundingTrigger(result);
 
     expect(adapted.report).toEqual(result.report);
     expect(adapted.grounded).toBeUndefined();
     expect(adapted.quality.reason).toBe(result.quality.reason);
   });
 
-  it('emits logging event with reason for both applied and skipped branches', () => {
-    const events: Array<{ action: string; reason: string; attemptNumber: number; reportHash: string }> = [];
+  it('emits logging event with reason for both applied and skipped branches', async () => {
+    const events: Array<{
+      action: string;
+      reason: string;
+      attemptNumber: number;
+      sourceReportHash: string;
+      resultReportHash: string;
+    }> = [];
 
-    adaptiveGroundingTrigger(
+    await adaptiveGroundingTrigger(
       sampleResult({
         quality: {
           shouldGround: false,
@@ -82,7 +88,7 @@ describe('adaptiveGroundingTrigger', () => {
       },
     );
 
-    adaptiveGroundingTrigger(
+    await adaptiveGroundingTrigger(
       sampleResult({
         quality: {
           shouldGround: true,
@@ -99,11 +105,45 @@ describe('adaptiveGroundingTrigger', () => {
     expect(events[0].action).toBe('skipped');
     expect(events[0].reason).toContain('quality acceptable');
     expect(events[0].attemptNumber).toBe(3);
-    expect(events[0].reportHash).toHaveLength(64);
+    expect(events[0].sourceReportHash).toHaveLength(64);
+    expect(events[0].resultReportHash).toHaveLength(64);
 
     expect(events[1].action).toBe('applied');
     expect(events[1].reason).toContain('ACCEPT_WITH_WARNINGS');
     expect(events[1].attemptNumber).toBe(4);
-    expect(events[1].reportHash).toHaveLength(64);
+    expect(events[1].sourceReportHash).toHaveLength(64);
+    expect(events[1].resultReportHash).toHaveLength(64);
+  });
+
+  it('applies real groundFinalReport corrections safely', async () => {
+    const noisy = sampleResult({
+      report: {
+        ...sampleReport(),
+        ideaSummary: '  AI assistant   for SMBs  ',
+        risks: ['  Customer churn  ', 'Customer churn', '  '],
+        score: {
+          marketDemand: 12,
+          competition: -2,
+          executionDifficulty: 7.456,
+          profitPotential: 8,
+          overall: 7.25,
+        },
+      },
+      quality: {
+        shouldGround: true,
+        reason: 'outcome is ACCEPT_WITH_WARNINGS',
+      },
+    });
+
+    const adapted = await adaptiveGroundingTrigger(noisy, {
+      groundingFn: groundFinalReport,
+    });
+
+    expect(adapted.report.ideaSummary).toBe('AI assistant for SMBs');
+    expect(adapted.report.risks).toEqual(['Customer churn']);
+    expect(adapted.report.score.marketDemand).toBe(10);
+    expect(adapted.report.score.competition).toBe(0);
+    expect(adapted.report.score.executionDifficulty).toBe(7.46);
+    expect(adapted.grounded?.notes).toContain('Applied adaptive grounding corrections');
   });
 });
