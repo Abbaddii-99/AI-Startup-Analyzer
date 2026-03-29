@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AgentInterface } from './agent.interface';
 import { AIService } from './ai.service';
+import { validateComprehensiveIdeaAnalysis } from '@ai-analyzer/shared';
 
 @Injectable()
 export class ComprehensiveIdeaAnalyzerAgent implements AgentInterface {
@@ -30,6 +31,7 @@ Format the response as JSON with these sections.
 `;
 
     const response = await this.aiService.generate(prompt);
-    return this.aiService.parseJSON(response);
+    const parsed = this.aiService.parseJSON<unknown>(response);
+    return validateComprehensiveIdeaAnalysis(parsed);
   }
 }
