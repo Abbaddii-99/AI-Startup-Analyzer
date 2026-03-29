@@ -12,9 +12,18 @@ import {
 import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 import { compareFinalReportAttempts, shouldRetryFinalReportAttempt } from './final-report.retry-policy';
+import { evaluateFinalReportQuality, type FinalReportOutcome } from './final-report-quality';
+
+export interface FinalReportAgentResult {
+  report: FinalReport;
+  quality: {
+    shouldGround: boolean;
+    reason: string;
+  };
+}
 
 @Injectable()
-export class FinalReportAgent implements Agent<FinalReport> {
+export class FinalReportAgent implements Agent<FinalReportAgentResult> {
   private readonly logger = new Logger(FinalReportAgent.name);
   private readonly maxRetries = 2;
   private readonly significantConfidenceDrop = 0.2;
@@ -90,7 +99,7 @@ export class FinalReportAgent implements Agent<FinalReport> {
     this.logger.debug(`FinalReport attempt summary: ${summary}`);
   }
 
-  async execute(idea: string, context: any): Promise<FinalReport> {
+  async execute(idea: string, context: any): Promise<FinalReportAgentResult> {
     const prompt = `You are a venture capital startup analyst. Respond in the same language as the startup idea.
 
 Combine the following analyses into a professional startup report.
@@ -215,10 +224,19 @@ Return JSON format:
     }
 
     const best = successfulAttempts.sort(compareFinalReportAttempts)[0];
+    const report = best.validation.data as FinalReport;
+    const outcome: FinalReportOutcome =
+      best.validation.issues.length > 0 ? 'ACCEPT_WITH_WARNINGS' : 'ACCEPT_CLEAN';
+    const quality = evaluateFinalReportQuality({
+      confidence: best.confidence,
+      highestSeverity: best.validation.highestSeverity,
+      issues: best.validation.issues,
+      outcome,
+    });
 
     this.logger.log(
       `FinalReport selected attempt=${best.attempt} severity=${best.validation.highestSeverity ?? 'NONE'} confidence=${best.confidence.toFixed(2)}`,
     );
-    return best.validation.data as FinalReport;
+    return { report, quality };
   }
 }

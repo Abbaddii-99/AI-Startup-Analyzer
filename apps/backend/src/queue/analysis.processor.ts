@@ -16,6 +16,7 @@ import { BusinessModelAgent } from '../agents/business-model.agent';
 import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
+import { adaptiveGroundingTrigger } from '../agents/final-report.adaptive-grounding';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -67,7 +68,7 @@ export class AnalysisProcessor extends WorkerHost {
       const agentResults = await this.runAgentsWithProgress(job, idea);
       await job.updateProgress(90);
 
-      const [finalReportData, riskRadarData, roadmapData, businessModelData, visionMissionData, brandIdentityData, budgetEstimateData] = await Promise.all([
+      const [finalReportResult, riskRadarData, roadmapData, businessModelData, visionMissionData, brandIdentityData, budgetEstimateData] = await Promise.all([
         this.finalReport.execute(idea, agentResults),
         this.riskRadar.execute(idea, agentResults),
         this.roadmap.execute(idea, agentResults),
@@ -76,6 +77,15 @@ export class AnalysisProcessor extends WorkerHost {
         this.brandIdentity.execute(idea, agentResults),
         this.budgetEstimator.execute(idea, agentResults),
       ]);
+      const adaptiveFinalReportResult = adaptiveGroundingTrigger(finalReportResult, {
+        attemptNumber: 1,
+        onLog: (event) => {
+          this.logger.log(
+            `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.reportHash.slice(0, 12)}`,
+          );
+        },
+      });
+      const finalReportData = adaptiveFinalReportResult.report;
       await job.updateProgress(98);
 
       // Run comprehensive idea analysis after all other agents
