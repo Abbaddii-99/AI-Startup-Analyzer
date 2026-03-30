@@ -17,17 +17,23 @@ function result(overrides: Partial<FinalReportProcessingResult> = {}): FinalRepo
 }
 
 describe('trackGroundingEffectiveness', () => {
-  it('computes confidenceDelta and issuesDelta using the required formulas', () => {
-    const before = result({ confidence: 0.55, issues: [issue('a'), issue('b'), issue('c')] });
-    const after = result({ confidence: 0.73, issues: [issue('a')] });
+  it('1) confidence increased', () => {
+    const before = result({ confidence: 0.55 });
+    const after = result({ confidence: 0.73 });
 
     const metrics = trackGroundingEffectiveness({ before, after });
-
     expect(metrics.confidenceDelta).toBeCloseTo(0.18, 8);
+  });
+
+  it('2) issues reduced', () => {
+    const before = result({ issues: [issue('a'), issue('b'), issue('c')] });
+    const after = result({ issues: [issue('a')] });
+
+    const metrics = trackGroundingEffectiveness({ before, after });
     expect(metrics.issuesDelta).toBe(2);
   });
 
-  it('returns severityImproved=true when after severity is lower than before', () => {
+  it('3) severity improved', () => {
     const before = result({ highestSeverity: 'HIGH' });
     const after = result({ highestSeverity: 'MEDIUM' });
 
@@ -35,17 +41,29 @@ describe('trackGroundingEffectiveness', () => {
     expect(metrics.severityImproved).toBe(true);
   });
 
-  it('returns severityImproved=false when severity is unchanged or worse', () => {
-    const unchanged = trackGroundingEffectiveness({
+  it('4) no improvement', () => {
+    const metrics = trackGroundingEffectiveness({
       before: result({ highestSeverity: 'MEDIUM' }),
       after: result({ highestSeverity: 'MEDIUM' }),
     });
-    const worse = trackGroundingEffectiveness({
+
+    expect(metrics.confidenceDelta).toBe(0);
+    expect(metrics.issuesDelta).toBe(0);
+    expect(metrics.severityImproved).toBe(false);
+  });
+
+  it('5) regression (worse after grounding)', () => {
+    const metrics = trackGroundingEffectiveness({
       before: result({ highestSeverity: 'LOW' }),
-      after: result({ highestSeverity: 'HIGH' }),
+      after: result({
+        highestSeverity: 'HIGH',
+        confidence: 0.5,
+        issues: [issue('a'), issue('b'), issue('c'), issue('d')],
+      }),
     });
 
-    expect(unchanged.severityImproved).toBe(false);
-    expect(worse.severityImproved).toBe(false);
+    expect(metrics.confidenceDelta).toBeLessThan(0);
+    expect(metrics.issuesDelta).toBeLessThan(0);
+    expect(metrics.severityImproved).toBe(false);
   });
 });
