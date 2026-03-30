@@ -1,6 +1,11 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
+import {
+  computeNormalizationConfidence,
+  normalizeFinalReport,
+  validateFinalReportDetailed,
+} from '@ai-analyzer/shared';
 import { prisma } from '../prisma';
 import { IdeaAnalyzerAgent } from '../agents/idea-analyzer.agent';
 import { ComprehensiveIdeaAnalyzerAgent } from '../agents/comprehensive-idea-analyzer.agent';
@@ -17,6 +22,8 @@ import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
 import { adaptiveGroundingTrigger } from '../agents/final-report.adaptive-grounding';
+import { trackGroundingEffectiveness } from '../agents/final-report-grounding-effectiveness';
+import type { FinalReportProcessingResult } from '../agents/final-report-quality';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -26,6 +33,17 @@ function sanitizeIdea(idea: string): string {
     .replace(/ignore\s+(previous|above|all)\s+instructions?/gi, '')
     .replace(/system\s*:/gi, '')
     .replace(/\\n|\\r/g, ' ');
+}
+
+function toProcessingResult(report: unknown): FinalReportProcessingResult {
+  const normalized = normalizeFinalReport(report);
+  const validation = validateFinalReportDetailed(normalized.draft);
+  return {
+    confidence: computeNormalizationConfidence(normalized.report),
+    highestSeverity: validation.highestSeverity,
+    issues: validation.issues,
+    outcome: validation.issues.length > 0 ? 'ACCEPT_WITH_WARNINGS' : 'ACCEPT_CLEAN',
+  };
 }
 
 @Injectable()
@@ -85,6 +103,19 @@ export class AnalysisProcessor extends WorkerHost {
           );
         },
       });
+      if (adaptiveFinalReportResult.grounded) {
+        const before = toProcessingResult(finalReportResult.report);
+        const after = toProcessingResult(adaptiveFinalReportResult.report);
+        const effectiveness = trackGroundingEffectiveness({ before, after });
+        const signedConfidenceDelta = effectiveness.confidenceDelta >= 0
+          ? `+${effectiveness.confidenceDelta.toFixed(2)}`
+          : effectiveness.confidenceDelta.toFixed(2);
+        const beforeSeverity = before.highestSeverity ?? 'NONE';
+        const afterSeverity = after.highestSeverity ?? 'NONE';
+        this.logger.log(
+          `[GroundingEffectiveness] confidence: ${before.confidence.toFixed(2)} → ${after.confidence.toFixed(2)} confidenceDelta: ${signedConfidenceDelta} issues: ${before.issues.length} → ${after.issues.length} issuesDelta: ${effectiveness.issuesDelta} severity: ${beforeSeverity} → ${afterSeverity} severityImproved: ${effectiveness.severityImproved}`,
+        );
+      }
       const finalReportData = adaptiveFinalReportResult.report;
       await job.updateProgress(98);
 
