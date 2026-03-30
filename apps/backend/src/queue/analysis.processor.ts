@@ -21,9 +21,15 @@ import { BusinessModelAgent } from '../agents/business-model.agent';
 import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
+import { AIService } from '../agents/ai.service';
 import { adaptiveGroundingTrigger } from '../agents/final-report.adaptive-grounding';
 import { trackGroundingEffectiveness } from '../agents/final-report-grounding-effectiveness';
-import type { FinalReportProcessingResult } from '../agents/final-report-quality';
+import {
+  evaluateFinalReportQuality,
+  type FinalReportProcessingResult,
+} from '../agents/final-report-quality';
+import { decideGroundingStrategy } from '../agents/final-report.grounding-strategy';
+import { enhanceFinalReportWithAI } from '../agents/final-report.ai-grounding';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -46,6 +52,13 @@ function toProcessingResult(report: unknown): FinalReportProcessingResult {
   };
 }
 
+function toStrategyReason(qualityReason: string): string {
+  const normalized = qualityReason.toLowerCase();
+  if (normalized.includes('confidence below threshold')) return 'low confidence';
+  if (normalized.includes('high issue count')) return 'too many issues';
+  return qualityReason;
+}
+
 @Injectable()
 @Processor('analysis')
 export class AnalysisProcessor extends WorkerHost {
@@ -66,6 +79,7 @@ export class AnalysisProcessor extends WorkerHost {
     private visionMission: VisionMissionAgent,
     private brandIdentity: BrandIdentityAgent,
     private budgetEstimator: BudgetEstimatorAgent,
+    private ai: AIService,
   ) {
     super();
   }
@@ -95,28 +109,59 @@ export class AnalysisProcessor extends WorkerHost {
         this.brandIdentity.execute(idea, agentResults),
         this.budgetEstimator.execute(idea, agentResults),
       ]);
-      const adaptiveFinalReportResult = await adaptiveGroundingTrigger(finalReportResult, {
-        attemptNumber: 1,
-        onLog: (event) => {
-          this.logger.log(
-            `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.sourceReportHash.slice(0, 12)}=>${event.resultReportHash.slice(0, 12)}`,
-          );
+      const beforeProcessing = toProcessingResult(finalReportResult.report);
+      const quality = evaluateFinalReportQuality(beforeProcessing);
+      const strategy = decideGroundingStrategy({
+        quality: {
+          shouldGround: quality.shouldGround,
+          reason: toStrategyReason(quality.reason),
         },
       });
-      if (adaptiveFinalReportResult.grounded) {
-        const before = toProcessingResult(finalReportResult.report);
-        const after = toProcessingResult(adaptiveFinalReportResult.report);
-        const effectiveness = trackGroundingEffectiveness({ before, after });
+
+      let selectedFinalReportResult = {
+        report: finalReportResult.report,
+        quality,
+      };
+
+      if (strategy.useRuleBased) {
+        const adaptiveFinalReportResult = await adaptiveGroundingTrigger(selectedFinalReportResult, {
+          attemptNumber: 1,
+          onLog: (event) => {
+            this.logger.log(
+              `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.sourceReportHash.slice(0, 12)}=>${event.resultReportHash.slice(0, 12)}`,
+            );
+          },
+        });
+        selectedFinalReportResult = {
+          report: adaptiveFinalReportResult.report,
+          quality: selectedFinalReportResult.quality,
+        };
+      } else if (strategy.useAIGrounding) {
+        const aiGrounded = await enhanceFinalReportWithAI(selectedFinalReportResult.report, this.ai);
+        this.logger.log(`FinalReport AI grounding applied: ${aiGrounded.notes ?? 'no notes'}`);
+        selectedFinalReportResult = {
+          report: aiGrounded.groundedReport,
+          quality: selectedFinalReportResult.quality,
+        };
+      }
+
+      if (strategy.useRuleBased || strategy.useAIGrounding) {
+        const afterProcessing = toProcessingResult(selectedFinalReportResult.report);
+        const effectiveness = trackGroundingEffectiveness({
+          before: beforeProcessing,
+          after: afterProcessing,
+        });
         const signedConfidenceDelta = effectiveness.confidenceDelta >= 0
           ? `+${effectiveness.confidenceDelta.toFixed(2)}`
           : effectiveness.confidenceDelta.toFixed(2);
-        const beforeSeverity = before.highestSeverity ?? 'NONE';
-        const afterSeverity = after.highestSeverity ?? 'NONE';
+        const beforeSeverity = beforeProcessing.highestSeverity ?? 'NONE';
+        const afterSeverity = afterProcessing.highestSeverity ?? 'NONE';
         this.logger.log(
-          `[GroundingEffectiveness] confidence: ${before.confidence.toFixed(2)} → ${after.confidence.toFixed(2)} confidenceDelta: ${signedConfidenceDelta} issues: ${before.issues.length} → ${after.issues.length} issuesDelta: ${effectiveness.issuesDelta} severity: ${beforeSeverity} → ${afterSeverity} severityImproved: ${effectiveness.severityImproved}`,
+          `[GroundingEffectiveness] confidence: ${beforeProcessing.confidence.toFixed(2)} → ${afterProcessing.confidence.toFixed(2)} confidenceDelta: ${signedConfidenceDelta} issues: ${beforeProcessing.issues.length} → ${afterProcessing.issues.length} issuesDelta: ${effectiveness.issuesDelta} severity: ${beforeSeverity} → ${afterSeverity} severityImproved: ${effectiveness.severityImproved}`,
         );
       }
-      const finalReportData = adaptiveFinalReportResult.report;
+
+      const finalReportData = selectedFinalReportResult.report;
       await job.updateProgress(98);
 
       // Run comprehensive idea analysis after all other agents
