@@ -30,6 +30,7 @@ import {
 } from '../agents/final-report-quality';
 import { decideGroundingStrategy } from '../agents/final-report.grounding-strategy';
 import { enhanceFinalReportWithAI } from '../agents/final-report.ai-grounding';
+import { isAIGroundingEnabled, isRuleGroundingEnabled } from '../config/grounding-flags';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -122,8 +123,9 @@ export class AnalysisProcessor extends WorkerHost {
         report: finalReportResult.report,
         quality,
       };
+      let groundingExecuted = false;
 
-      if (strategy.useRuleBased) {
+      if (strategy.useRuleBased && isRuleGroundingEnabled()) {
         const adaptiveFinalReportResult = await adaptiveGroundingTrigger(selectedFinalReportResult, {
           attemptNumber: 1,
           onLog: (event) => {
@@ -136,16 +138,22 @@ export class AnalysisProcessor extends WorkerHost {
           report: adaptiveFinalReportResult.report,
           quality: selectedFinalReportResult.quality,
         };
-      } else if (strategy.useAIGrounding) {
+        groundingExecuted = true;
+      } else if (strategy.useRuleBased && !isRuleGroundingEnabled()) {
+        this.logger.log('[GroundingSkippedByFlag] type=RULE');
+      } else if (strategy.useAIGrounding && isAIGroundingEnabled()) {
         const aiGrounded = await enhanceFinalReportWithAI(selectedFinalReportResult.report, this.ai);
         this.logger.log(`FinalReport AI grounding applied: ${aiGrounded.notes ?? 'no notes'}`);
         selectedFinalReportResult = {
           report: aiGrounded.groundedReport,
           quality: selectedFinalReportResult.quality,
         };
+        groundingExecuted = true;
+      } else if (strategy.useAIGrounding && !isAIGroundingEnabled()) {
+        this.logger.log('[GroundingSkippedByFlag] type=AI');
       }
 
-      if (strategy.useRuleBased || strategy.useAIGrounding) {
+      if (groundingExecuted) {
         const afterProcessing = toProcessingResult(selectedFinalReportResult.report);
         const effectiveness = trackGroundingEffectiveness({
           before: beforeProcessing,
