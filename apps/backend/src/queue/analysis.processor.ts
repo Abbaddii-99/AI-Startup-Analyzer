@@ -31,6 +31,8 @@ import {
 import { decideGroundingStrategy } from '../agents/final-report.grounding-strategy';
 import { enhanceFinalReportWithAI } from '../agents/final-report.ai-grounding';
 import { isAIGroundingEnabled, isRuleGroundingEnabled } from '../config/grounding-flags';
+import { logAIEvent } from '../utils/ai-logger';
+import { canRunAIGrounding } from '../config/grounding-limits';
 
 function sanitizeIdea(idea: string): string {
   return idea
@@ -110,6 +112,7 @@ export class AnalysisProcessor extends WorkerHost {
         this.brandIdentity.execute(idea, agentResults),
         this.budgetEstimator.execute(idea, agentResults),
       ]);
+      let aiGroundingCalls = 0;
       const beforeProcessing = toProcessingResult(finalReportResult.report);
       const quality = evaluateFinalReportQuality(beforeProcessing);
       const strategy = decideGroundingStrategy({
@@ -129,9 +132,20 @@ export class AnalysisProcessor extends WorkerHost {
         const adaptiveFinalReportResult = await adaptiveGroundingTrigger(selectedFinalReportResult, {
           attemptNumber: 1,
           onLog: (event) => {
-            this.logger.log(
-              `FinalReport grounding ${event.action} attempt=${event.attemptNumber} reason=${event.reason} hash=${event.sourceReportHash.slice(0, 12)}=>${event.resultReportHash.slice(0, 12)}`,
-            );
+            logAIEvent({
+              stage: 'grounding',
+              type: 'rule_used',
+              reason: event.reason,
+              confidenceBefore: beforeProcessing.confidence,
+              confidenceAfter: beforeProcessing.confidence,
+              metadata: {
+                attemptNumber: event.attemptNumber,
+                sourceReportHash: event.sourceReportHash.slice(0, 12),
+                resultReportHash: event.resultReportHash.slice(0, 12),
+                mode: 'RULE',
+              },
+              timestamp: Date.now(),
+            });
           },
         });
         selectedFinalReportResult = {
@@ -140,17 +154,47 @@ export class AnalysisProcessor extends WorkerHost {
         };
         groundingExecuted = true;
       } else if (strategy.useRuleBased && !isRuleGroundingEnabled()) {
-        this.logger.log('[GroundingSkippedByFlag] type=RULE');
+        logAIEvent({
+          stage: 'grounding',
+          type: 'skipped',
+          reason: 'flag_disabled',
+          metadata: { type: 'RULE' },
+          timestamp: Date.now(),
+        });
       } else if (strategy.useAIGrounding && isAIGroundingEnabled()) {
+        if (!canRunAIGrounding(aiGroundingCalls)) {
+          logAIEvent({
+            stage: 'grounding',
+            type: 'skipped',
+            reason: 'ai_limit_reached',
+            timestamp: Date.now(),
+          });
+        } else {
         const aiGrounded = await enhanceFinalReportWithAI(selectedFinalReportResult.report, this.ai);
-        this.logger.log(`FinalReport AI grounding applied: ${aiGrounded.notes ?? 'no notes'}`);
+        aiGroundingCalls++;
+        logAIEvent({
+          stage: 'grounding',
+          type: 'ai_used',
+          reason: aiGrounded.notes ?? strategy.reason,
+          confidenceBefore: beforeProcessing.confidence,
+          confidenceAfter: beforeProcessing.confidence,
+          metadata: { mode: 'AI' },
+            timestamp: Date.now(),
+          });
         selectedFinalReportResult = {
           report: aiGrounded.groundedReport,
           quality: selectedFinalReportResult.quality,
         };
         groundingExecuted = true;
+        }
       } else if (strategy.useAIGrounding && !isAIGroundingEnabled()) {
-        this.logger.log('[GroundingSkippedByFlag] type=AI');
+        logAIEvent({
+          stage: 'grounding',
+          type: 'skipped',
+          reason: 'flag_disabled',
+          metadata: { type: 'AI' },
+          timestamp: Date.now(),
+        });
       }
 
       if (groundingExecuted) {
@@ -164,9 +208,22 @@ export class AnalysisProcessor extends WorkerHost {
           : effectiveness.confidenceDelta.toFixed(2);
         const beforeSeverity = beforeProcessing.highestSeverity ?? 'NONE';
         const afterSeverity = afterProcessing.highestSeverity ?? 'NONE';
-        this.logger.log(
-          `[GroundingEffectiveness] confidence: ${beforeProcessing.confidence.toFixed(2)} → ${afterProcessing.confidence.toFixed(2)} confidenceDelta: ${signedConfidenceDelta} issues: ${beforeProcessing.issues.length} → ${afterProcessing.issues.length} issuesDelta: ${effectiveness.issuesDelta} severity: ${beforeSeverity} → ${afterSeverity} severityImproved: ${effectiveness.severityImproved}`,
-        );
+        logAIEvent({
+          stage: 'effectiveness',
+          type: 'evaluation',
+          confidenceBefore: beforeProcessing.confidence,
+          confidenceAfter: afterProcessing.confidence,
+          issuesBefore: beforeProcessing.issues.length,
+          issuesAfter: afterProcessing.issues.length,
+          severityBefore: beforeSeverity,
+          severityAfter: afterSeverity,
+          metadata: {
+            confidenceDelta: signedConfidenceDelta,
+            issuesDelta: effectiveness.issuesDelta,
+            severityImproved: effectiveness.severityImproved,
+          },
+          timestamp: Date.now(),
+        });
       }
 
       const finalReportData = selectedFinalReportResult.report;
