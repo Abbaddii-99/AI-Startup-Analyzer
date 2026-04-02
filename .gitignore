@@ -32,6 +32,7 @@ REPO_OVERVIEW.md
 TODO.md
 PLAN.md
 SECURITY.md
+.private_notes/
 
 # Sensitive files
 reset-limit.sql
