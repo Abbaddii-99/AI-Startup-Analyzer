@@ -27,6 +27,12 @@ yarn-error.log*
 .env*.local
 packages/db/.env
 
+# Personal notes (to treat like env secrets)
+REPO_OVERVIEW.md
+TODO.md
+PLAN.md
+SECURITY.md
+
 # Sensitive files
 reset-limit.sql
 *.log
