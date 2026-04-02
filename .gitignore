@@ -33,6 +33,7 @@ TODO.md
 PLAN.md
 SECURITY.md
 .private_notes/
+.internal/
 
 # Sensitive files
 reset-limit.sql
