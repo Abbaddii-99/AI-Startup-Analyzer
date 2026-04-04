@@ -41,13 +41,13 @@ services:
     container_name: ai-analyzer-backend-prod
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-ai_analyzer}
+      - DATABASE_URL=REDACTED_SECRET
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=demo
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - BACKEND_PORT=4000
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
