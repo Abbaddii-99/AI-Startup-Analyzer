@@ -151,6 +151,16 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
+## Netlify Deployment
+
+The repository ships with a `netlify.toml` so Netlify will only build the frontend app instead of the entire workspace. Use these settings on your Netlify site:
+
+- **Base directory:** the root of the repo (default)
+- **Build command:** `pnpm --filter @ai-analyzer/frontend build`
+- **Publish directory:** `apps/frontend/.next`
+
+Make sure `NEXT_PUBLIC_API_URL` (and any other `NEXT_PUBLIC_*` environment variables your frontend relies on) point at your running backend API so the client can submit ideas and poll for progress.
+
 ## API (High-level)
 
 Auth:
