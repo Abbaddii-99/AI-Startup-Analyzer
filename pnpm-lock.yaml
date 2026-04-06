@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  lodash: ^4.17.23
+  lodash: ^4.18.1
   multer: ^2.1.1
   file-type: ^21.3.2
   flatted: ^3.4.2
@@ -1612,7 +1612,7 @@ packages:
       '@nestjs/common': 10.4.22(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       dotenv: 16.4.5
       dotenv-expand: 10.0.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       rxjs: 7.8.2
     dev: false
 
@@ -6086,7 +6086,7 @@ packages:
       cli-width: 3.0.0
       external-editor: 3.1.0
       figures: 3.2.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       mute-stream: 0.0.8
       ora: 5.4.1
       run-async: 2.4.1
@@ -6108,7 +6108,7 @@ packages:
       cli-width: 4.1.0
       external-editor: 3.1.0
       figures: 3.2.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       mute-stream: 1.0.0
       ora: 5.4.1
       run-async: 3.0.0
@@ -7324,8 +7324,8 @@ packages:
     dev: false
     optional: true
 
-  /lodash@4.17.23:
-    resolution: {integrity: sha512-REDACTED_SECRET==}
+  /lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   /log-symbols@4.1.0:
     resolution: {integrity: sha512-REDACTED_SECRET==}
@@ -7807,7 +7807,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7825,7 +7825,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7843,7 +7843,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7861,7 +7861,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7882,7 +7882,7 @@ packages:
       '@babel/runtime': 7.29.2
       chokidar: 3.6.0
       glob: 10.5.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       minimatch: 9.0.9
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
       mjml-parser-xml: 5.0.0-beta.2
@@ -7905,7 +7905,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7929,7 +7929,7 @@ packages:
       detect-node: 2.1.0
       htmlnano: 3.2.0(cssnano@7.1.3)(postcss@8.5.8)(typescript@5.9.3)
       juice: 11.1.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-parser-xml: 5.0.0-beta.2
       mjml-validator: 5.0.0-beta.2
       postcss: 8.5.8
@@ -7950,7 +7950,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7968,7 +7968,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -7986,7 +7986,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8004,7 +8004,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8022,7 +8022,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8040,7 +8040,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8058,7 +8058,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8076,7 +8076,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8094,7 +8094,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8112,7 +8112,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8130,7 +8130,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8148,7 +8148,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8166,7 +8166,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8186,7 +8186,7 @@ packages:
       '@babel/runtime': 7.29.2
       detect-node: 2.1.0
       htmlparser2: 9.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
     dev: false
     optional: true
 
@@ -8236,7 +8236,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8254,7 +8254,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8272,7 +8272,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8290,7 +8290,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8308,7 +8308,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8326,7 +8326,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
@@ -8352,7 +8352,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.29.2
-      lodash: 4.17.23
+      lodash: 4.18.1
       mjml-core: 5.0.0-beta.2(typescript@5.9.3)
       mjml-section: 5.0.0-beta.2(typescript@5.9.3)
     transitivePeerDependencies:
@@ -8523,7 +8523,7 @@ packages:
   /node-emoji@1.11.0:
     resolution: {integrity: sha512-REDACTED_SECRET==}
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
     dev: true
 
   /node-exports-info@1.6.0:
