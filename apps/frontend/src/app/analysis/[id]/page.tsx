@@ -81,25 +81,32 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (!token) { router.push('/auth/login'); return }
 
-    let interval: ReturnType<typeof setInterval> | null = null
+    let cancelled = false
+    let pollDelay = 2000
 
-    const pollProgress = () => {
-      interval = setInterval(async () => {
-        try {
-          const { data } = await api.get(`/analysis/${params.id}/progress`)
-          const p = data.progress || 0
-          setProgress(p)
-          const labelKey = Object.keys(PROGRESS_LABELS).map(Number).filter(k => k <= p).pop()
-          if (labelKey !== undefined) setProgressLabel(PROGRESS_LABELS[labelKey])
-          if (data.status === 'COMPLETED') {
-            clearInterval(interval!)
-            const { data: full } = await api.get(`/analysis/${params.id}`)
-            setAnalysis(full)
-            setLoading(false)
-          }
-          if (data.status === 'FAILED') { clearInterval(interval!); setLoading(false) }
-        } catch { clearInterval(interval!); setLoading(false) }
-      }, 2000)
+    const poll = async () => {
+      if (cancelled) return
+      try {
+        const { data } = await api.get(`/analysis/${params.id}/progress`)
+        const p = data.progress || 0
+        setProgress(p)
+        const labelKey = Object.keys(PROGRESS_LABELS).map(Number).filter(k => k <= p).pop()
+        if (labelKey !== undefined) setProgressLabel(PROGRESS_LABELS[labelKey])
+
+        if (data.status === 'COMPLETED') {
+          const { data: full } = await api.get(`/analysis/${params.id}`)
+          setAnalysis(full)
+          setLoading(false)
+          return
+        }
+        if (data.status === 'FAILED') { setLoading(false); return }
+
+        // Exponential backoff: increase interval up to 10s
+        pollDelay = Math.min(pollDelay * 1.2, 10000)
+        setTimeout(poll, pollDelay)
+      } catch {
+        setLoading(false)
+      }
     }
 
     const fetchAnalysis = async () => {
@@ -107,12 +114,12 @@ export default function AnalysisPage() {
         const { data } = await api.get(`/analysis/${params.id}`)
         setAnalysis(data)
         if (data.status === 'COMPLETED' || data.status === 'FAILED') { setLoading(false); return }
-        pollProgress()
+        poll()
       } catch { setLoading(false) }
     }
 
     fetchAnalysis()
-    return () => { if (interval) clearInterval(interval) }
+    return () => { cancelled = true }
   }, [params.id, token, router])
 
   // IntersectionObserver to track active section
@@ -167,27 +174,16 @@ export default function AnalysisPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const SECTION_TO_API: Record<string, string> = {
-    'target-audience': 'idea-analysis',
-    'market-size': 'market-research',
-    'competitors': 'competitor-analysis',
-    'mvp': 'mvp',
-    'business-model': 'business-model',
-    'risks': 'risk-radar',
-    'roadmap': 'roadmap',
-    'brand': 'brand-identity',
-    'vision': 'vision-mission',
-    'budget': 'budget',
-  }
-
   const regenerateSection = async () => {
-    const apiSection = SECTION_TO_API[activeSection]
+    const apiSection = SECTION_TO_API_STATIC[activeSection]
     if (!apiSection || regenerating) return
     setRegenerating(true)
     try {
       const { data } = await api.post(`/analysis/${params.id}/regenerate/${apiSection}`)
       setAnalysis((prev: any) => ({ ...prev, ...data }))
-    } catch {}
+    } catch (err: any) {
+      alert(`Failed to regenerate: ${err.message || 'Unknown error'}`)
+    }
     finally { setRegenerating(false) }
   }
 
