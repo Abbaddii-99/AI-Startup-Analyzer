@@ -103,17 +103,39 @@ export class AnalysisProcessor extends WorkerHost {
       const agentResults = await this.runAgentsWithProgress(job, idea);
       await job.updateProgress(90);
 
-      const [finalReportResult, riskRadarData, roadmapData, businessModelData, visionMissionData, brandIdentityData, budgetEstimateData] = await Promise.all([
-        this.finalReport.execute(idea, agentResults),
-        this.riskRadar.execute(idea, agentResults),
-        this.roadmap.execute(idea, agentResults),
-        this.businessModel.execute(idea, agentResults),
-        this.visionMission.execute(idea, agentResults),
-        this.brandIdentity.execute(idea, agentResults),
-        this.budgetEstimator.execute(idea, agentResults),
-      ]);
+      // Run advanced agents in parallel with allSettled to handle partial failures
+      const [finalReportResult, riskRadarResult, roadmapResult, businessModelResult, visionMissionResult, brandIdentityResult, budgetEstimateResult] =
+        await Promise.allSettled([
+          this.finalReport.execute(idea, agentResults),
+          this.riskRadar.execute(idea, agentResults),
+          this.roadmap.execute(idea, agentResults),
+          this.businessModel.execute(idea, agentResults),
+          this.visionMission.execute(idea, agentResults),
+          this.brandIdentity.execute(idea, agentResults),
+          this.budgetEstimator.execute(idea, agentResults),
+        ]);
+
+      // Extract successful results, log failures but continue
+      const getResult = <T>(result: PromiseSettledResult<T>, name: string): T | null => {
+        if (result.status === 'fulfilled') return result.value;
+        this.logger.warn(`Agent ${name} failed: ${result.reason?.message ?? 'unknown'}`);
+        return null;
+      };
+
+      const finalReportResultValue = getResult(finalReportResult, 'FinalReport');
+      const riskRadarData = getResult(riskRadarResult, 'RiskRadar');
+      const roadmapData = getResult(roadmapResult, 'Roadmap');
+      const businessModelData = getResult(businessModelResult, 'BusinessModel');
+      const visionMissionData = getResult(visionMissionResult, 'VisionMission');
+      const brandIdentityData = getResult(brandIdentityResult, 'BrandIdentity');
+      const budgetEstimateData = getResult(budgetEstimateResult, 'BudgetEstimator');
+
+      if (!finalReportResultValue) {
+        throw new Error('Final report generation failed — cannot complete analysis without it');
+      }
+
       let aiGroundingCalls = 0;
-      const beforeProcessing = toProcessingResult(finalReportResult.report);
+      const beforeProcessing = toProcessingResult(finalReportResultValue.report);
       const quality = evaluateFinalReportQuality(beforeProcessing);
       const strategy = decideGroundingStrategy({
         quality: {
@@ -122,10 +144,7 @@ export class AnalysisProcessor extends WorkerHost {
         },
       });
 
-      let selectedFinalReportResult = {
-        report: finalReportResult.report,
-        quality,
-      };
+      let selectedFinalReportResult = finalReportResultValue;
       let groundingExecuted = false;
 
       if (strategy.useRuleBased && isRuleGroundingEnabled()) {
@@ -170,22 +189,22 @@ export class AnalysisProcessor extends WorkerHost {
             timestamp: Date.now(),
           });
         } else {
-        const aiGrounded = await enhanceFinalReportWithAI(selectedFinalReportResult.report, this.ai);
-        aiGroundingCalls++;
-        logAIEvent({
-          stage: 'grounding',
-          type: 'ai_used',
-          reason: aiGrounded.notes ?? strategy.reason,
-          confidenceBefore: beforeProcessing.confidence,
-          confidenceAfter: beforeProcessing.confidence,
-          metadata: { mode: 'AI' },
+          const aiGrounded = await enhanceFinalReportWithAI(selectedFinalReportResult.report, this.ai);
+          aiGroundingCalls++;
+          logAIEvent({
+            stage: 'grounding',
+            type: 'ai_used',
+            reason: aiGrounded.notes ?? strategy.reason,
+            confidenceBefore: beforeProcessing.confidence,
+            confidenceAfter: beforeProcessing.confidence,
+            metadata: { mode: 'AI' },
             timestamp: Date.now(),
           });
-        selectedFinalReportResult = {
-          report: aiGrounded.groundedReport,
-          quality: selectedFinalReportResult.quality,
-        };
-        groundingExecuted = true;
+          selectedFinalReportResult = {
+            report: aiGrounded.groundedReport,
+            quality: selectedFinalReportResult.quality,
+          };
+          groundingExecuted = true;
         }
       } else if (strategy.useAIGrounding && !isAIGroundingEnabled()) {
         logAIEvent({
@@ -236,20 +255,20 @@ export class AnalysisProcessor extends WorkerHost {
         where: { id: analysisId },
         data: {
           status: 'COMPLETED',
-          ideaAnalysis: agentResults.ideaAnalysis as any,
-          comprehensiveIdeaAnalysis: comprehensiveResult as any,
-          marketResearch: agentResults.marketResearch as any,
-          competitorAnalysis: agentResults.competitorAnalysis as any,
-          mvpPlan: agentResults.mvpPlan as any,
-          monetization: agentResults.monetization as any,
-          goToMarket: agentResults.goToMarket as any,
-          finalReport: finalReportData as any,
-          riskRadar: riskRadarData as any,
-          roadmap: roadmapData as any,
-          businessModel: businessModelData as any,
-          visionMission: visionMissionData as any,
-          brandIdentity: brandIdentityData as any,
-          budgetEstimate: budgetEstimateData as any,
+          ideaAnalysis: agentResults.ideaAnalysis,
+          comprehensiveIdeaAnalysis: comprehensiveResult,
+          marketResearch: agentResults.marketResearch,
+          competitorAnalysis: agentResults.competitorAnalysis,
+          mvpPlan: agentResults.mvpPlan,
+          monetization: agentResults.monetization,
+          goToMarket: agentResults.goToMarket,
+          finalReport: finalReportData,
+          riskRadar: riskRadarData,
+          roadmap: roadmapData,
+          businessModel: businessModelData,
+          visionMission: visionMissionData,
+          brandIdentity: brandIdentityData,
+          budgetEstimate: budgetEstimateData,
           marketDemandScore: finalReportData.score.marketDemand,
           competitionScore: finalReportData.score.competition,
           executionDifficultyScore: finalReportData.score.executionDifficulty,
@@ -268,23 +287,32 @@ export class AnalysisProcessor extends WorkerHost {
     }
   }
 
+  /**
+   * Run the first 6 independent agents in parallel with progress updates.
+   * These agents all depend only on the raw idea, not on each other's output.
+   */
   private async runAgentsWithProgress(job: Job, idea: string) {
-    const steps = [
-      { name: 'ideaAnalysis',       fn: () => this.ideaAnalyzer.execute(idea),        progress: 19 },
-      { name: 'marketResearch',     fn: () => this.marketResearch.execute(idea),       progress: 33 },
-      { name: 'competitorAnalysis', fn: () => this.competitorAnalysis.execute(idea),   progress: 47 },
-      { name: 'mvpPlan',            fn: () => this.mvpGenerator.execute(idea),         progress: 61 },
-      { name: 'monetization',       fn: () => this.monetization.execute(idea),         progress: 75 },
-      { name: 'goToMarket',         fn: () => this.goToMarket.execute(idea),           progress: 89 },
-    ];
+    // Run all 6 core agents concurrently
+    const [ideaAnalysis, marketResearch, competitorAnalysis, mvpPlan, monetization, goToMarket] =
+      await Promise.all([
+        this.ideaAnalyzer.execute(idea),
+        this.marketResearch.execute(idea),
+        this.competitorAnalysis.execute(idea),
+        this.mvpGenerator.execute(idea),
+        this.monetization.execute(idea),
+        this.goToMarket.execute(idea),
+      ]);
 
-    const results: Record<string, any> = {};
-    for (const { name, fn, progress } of steps) {
-      results[name] = await fn();
-      await job.updateProgress(progress);
-    }
+    await job.updateProgress(89);
 
-    return results as {
+    return {
+      ideaAnalysis,
+      marketResearch,
+      competitorAnalysis,
+      mvpPlan,
+      monetization,
+      goToMarket,
+    } as {
       ideaAnalysis: any;
       marketResearch: any;
       competitorAnalysis: any;

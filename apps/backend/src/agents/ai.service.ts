@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
@@ -10,7 +10,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1500;
 
 @Injectable()
-export class AIService {
+export class AIService implements OnModuleDestroy {
   private readonly logger = new Logger(AIService.name);
   private gemini: GoogleGenerativeAI | null = null;
   private openRouterKey: string | null = null;
@@ -31,7 +31,12 @@ export class AIService {
         port: parseInt(this.config.get('REDIS_PORT') || '6379'),
         password: this.config.get('REDIS_PASSWORD') || undefined,
         tls: this.config.get('REDIS_HOST')?.includes('upstash') ? {} : undefined,
-        lazyConnect: true,
+      });
+      // Test connection eagerly so failures are caught at startup
+      this.redis.ping().catch(() => {
+        this.logger.warn('Redis ping failed, caching disabled');
+        this.redis?.quit().catch(() => {});
+        this.redis = null;
       });
     } catch (err) {
       if (err instanceof Error) {
@@ -39,6 +44,12 @@ export class AIService {
       } else {
         this.logger.warn(`Redis unavailable, caching disabled: ${String(err)}`);
       }
+    }
+  }
+
+  async onModuleDestroy() {
+    if (this.redis) {
+      try { await this.redis.quit(); } catch { /* ignore */ }
     }
   }
 
@@ -100,7 +111,31 @@ export class AIService {
       { model, messages: [{ role: 'user', content: prompt }], max_tokens: 4000 },
       { headers: { Authorization: `Bearer ${this.openRouterKey}`, 'Content-Type': 'application/json' } },
     );
-    return response.data.choices[0].message.content;
+    const content = response.data.choices?.[0]?.message?.content;
+    if (!content || typeof content !== 'string') {
+      throw new Error('Empty or invalid response from AI service');
+    }
+    return content;
+  }
+
+  /** Sanitize malformed JSON string (handles unescaped newlines/tabs inside strings) */
+  private sanitizeJsonString(raw: string): string {
+    let inString = false;
+    let escaped = false;
+    let result = '';
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      if (escaped) { result += ch; escaped = false; continue; }
+      if (ch === '\\') { escaped = true; result += ch; continue; }
+      if (ch === '"') { inString = !inString; result += ch; continue; }
+      if (inString) {
+        if (ch === '\n') { result += '\\n'; continue; }
+        if (ch === '\r') { result += '\\r'; continue; }
+        if (ch === '\t') { result += '\\t'; continue; }
+      }
+      result += ch;
+    }
+    return result;
   }
 
   parseJSON<T>(text: string): T {
@@ -123,41 +158,13 @@ export class AIService {
       } catch { /* continue */ }
 
       try {
-        let inString = false;
-        let escaped = false;
-        let result = '';
-        for (let i = 0; i < raw.length; i++) {
-          const ch = raw[i];
-          if (escaped) { result += ch; escaped = false; continue; }
-          if (ch === '\\') { escaped = true; result += ch; continue; }
-          if (ch === '"') { inString = !inString; result += ch; continue; }
-          if (inString) {
-            if (ch === '\n') { result += '\\n'; continue; }
-            if (ch === '\r') { result += '\\r'; continue; }
-            if (ch === '\t') { result += '\\t'; continue; }
-          }
-          result += ch;
-        }
-        return JSON.parse(result);
+        const sanitized = this.sanitizeJsonString(raw);
+        return JSON.parse(sanitized);
       } catch { /* continue */ }
 
       try {
-        let inString = false;
-        let escaped = false;
-        let result = '';
-        for (let i = 0; i < raw.length; i++) {
-          const ch = raw[i];
-          if (escaped) { result += ch; escaped = false; continue; }
-          if (ch === '\\') { escaped = true; result += ch; continue; }
-          if (ch === '"') { inString = !inString; result += ch; continue; }
-          if (inString) {
-            if (ch === '\n') { result += '\\n'; continue; }
-            if (ch === '\r') { result += '\\r'; continue; }
-            if (ch === '\t') { result += '\\t'; continue; }
-          }
-          result += ch;
-        }
-        const fixed = result.replace(/,\s*([}\]])/g, '$1');
+        const sanitized = this.sanitizeJsonString(raw);
+        const fixed = sanitized.replace(/,\s*([}\]])/g, '$1');
         return JSON.parse(fixed);
       } catch { /* continue */ }
     }

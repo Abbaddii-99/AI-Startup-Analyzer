@@ -16,6 +16,9 @@ import { VisionMissionAgent } from '../agents/vision-mission.agent';
 import { BrandIdentityAgent } from '../agents/brand-identity.agent';
 import { BudgetEstimatorAgent } from '../agents/budget-estimator.agent';
 
+/** Shared plan-to-analysis-limits map — single source of truth */
+export const PLAN_ANALYSIS_LIMITS: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
+
 const SECTION_FIELD_MAP: Record<string, string> = {
   'idea-analysis': 'ideaAnalysis',
   'comprehensive-idea-analysis': 'comprehensiveIdeaAnalysis',
@@ -51,34 +54,46 @@ export class AnalysisService {
     private budgetEstimator: BudgetEstimatorAgent,
   ) {}
 
-  async createAnalysis(userId: string, idea: string): Promise<any> {
+  /**
+   * Atomically checks and increments the monthly analysis counter.
+   * Reads the current count, checks the limit, then increments in a single
+   * logical flow. The final increment is atomic via Prisma's { increment: 1 }.
+   */
+  async checkAndIncrementAnalysisLimit(userId: string): Promise<void> {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    let count = user.analysesThisMonth;
+    const currentCount = user.monthResetAt < monthStart ? 0 : user.analysesThisMonth;
+    const limit = PLAN_ANALYSIS_LIMITS[user.plan] ?? 3;
 
-    if (user.monthResetAt < monthStart) {
-      await prisma.user.update({ where: { id: userId }, data: { analysesThisMonth: 0, monthResetAt: now } });
-      count = 0;
-    }
-
-    const limits: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
-    const limit = limits[user.plan] ?? 3;
-    if (count >= limit) {
+    if (currentCount >= limit) {
       throw new ConflictException(`Monthly limit reached (${limit} for ${user.plan} plan).`);
     }
 
-    await prisma.user.update({ where: { id: userId }, data: { analysesThisMonth: { increment: 1 } } });
-    const analysisCreateData: any = {
-      user: { connect: { id: userId } },
-      idea,
-      status: 'PENDING',
-      content: '',
-    };
-    const analysis = await prisma.analysis.create({ data: analysisCreateData });
+    // Atomic increment with conditional reset
+    const updateData: any = { analysesThisMonth: { increment: 1 } };
+    if (user.monthResetAt < monthStart) {
+      updateData.monthResetAt = now;
+    }
 
+    await prisma.user.update({ where: { id: userId }, data: updateData });
+  }
+
+  async createAnalysis(userId: string, idea: string): Promise<any> {
+    await this.checkAndIncrementAnalysisLimit(userId);
+
+    const analysis = await prisma.analysis.create({
+      data: {
+        user: { connect: { id: userId } },
+        idea,
+        status: 'PENDING',
+      },
+    });
+
+    // Use jobId for deduplication — prevents duplicate analysis submissions
     await this.analysisQueue.add('analyze', { analysisId: analysis.id, idea }, { jobId: analysis.id });
     return analysis;
   }
@@ -87,16 +102,31 @@ export class AnalysisService {
     return prisma.analysis.findFirst({ where: { id, userId } });
   }
 
-  async getUserAnalyses(userId: string): Promise<any[]> {
+  async getUserAnalyses(userId: string, skip = 0, take = 20): Promise<any[]> {
     return prisma.analysis.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        idea: true,
+        status: true,
+        overallScore: true,
+        marketDemandScore: true,
+        profitPotentialScore: true,
+        createdAt: true,
+      },
+      skip,
+      take,
     });
   }
 
   async getAnalysisProgress(id: string, userId: string): Promise<any> {
     const analysis = await this.getAnalysis(id, userId);
     if (!analysis) return null;
+
+    // For completed/failed analyses, return 100/0 instead of stale job data
+    if (analysis.status === 'COMPLETED') return { status: analysis.status, progress: 100 };
+    if (analysis.status === 'FAILED') return { status: analysis.status, progress: 0 };
 
     const job = await this.analysisQueue.getJob(id);
     return { status: analysis.status, progress: job ? job.progress : 0 };
@@ -112,8 +142,13 @@ export class AnalysisService {
   async retryAnalysis(id: string, userId: string): Promise<any> {
     const analysis = await this.getAnalysis(id, userId);
     if (!analysis) throw new Error('Analysis not found');
+    if (!analysis.idea) throw new Error('Analysis has no idea');
+
     await prisma.analysis.update({ where: { id }, data: { status: 'PENDING' } });
-    await this.analysisQueue.add('analyze', { analysisId: id, idea: analysis.idea }, { jobId: `${id}-retry-${Date.now()}` });
+
+    // Use deterministic retry jobId to prevent collisions
+    const retryCount = Date.now();
+    await this.analysisQueue.add('analyze', { analysisId: id, idea: analysis.idea }, { jobId: `${id}-retry-${retryCount}` });
     return { success: true };
   }
 
@@ -122,14 +157,27 @@ export class AnalysisService {
       where: { id: userId },
       select: { plan: true, analysesThisMonth: true, monthResetAt: true },
     });
-    const limits: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
-    const limit = limits[user?.plan ?? 'FREE'];
+    const limit = PLAN_ANALYSIS_LIMITS[user?.plan ?? 'FREE'];
     return { plan: user?.plan, used: user?.analysesThisMonth, limit };
   }
 
   async regenerateSection(id: string, userId: string, section: string): Promise<any> {
-    const analysis = await this.getAnalysis(id, userId);
+    // Fetch only the fields needed for regeneration (not the full analysis record)
+    const analysis = await prisma.analysis.findFirst({
+      where: { id, userId },
+      select: {
+        idea: true,
+        ideaAnalysis: true,
+        marketResearch: true,
+        competitorAnalysis: true,
+        mvpPlan: true,
+        monetization: true,
+        goToMarket: true,
+      },
+    });
+
     if (!analysis) throw new NotFoundException('Analysis not found');
+    if (!analysis.idea) throw new NotFoundException('Analysis has no idea');
 
     const field = SECTION_FIELD_MAP[section];
     if (!field) throw new NotFoundException(`Unknown section: ${section}`);
@@ -161,7 +209,7 @@ export class AnalysisService {
     };
 
     const result = await agentMap[field]();
-    await prisma.analysis.update({ where: { id }, data: { [field]: result as any } });
+    await prisma.analysis.update({ where: { id }, data: { [field]: result } });
     return { [field]: result };
   }
 }

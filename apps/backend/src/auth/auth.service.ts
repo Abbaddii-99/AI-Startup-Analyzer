@@ -5,6 +5,8 @@ import { prisma } from '../prisma';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 
+const PLAN_ANALYSIS_LIMITS: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -96,37 +98,5 @@ export class AuthService {
       this.logger.log(`New Google user registered: ${user.id}`);
     }
     return user;
-  }
-
-  async checkAnalysisLimit(userId: string): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException();
-
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    if (user.monthResetAt < monthStart) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { analysesThisMonth: 0, monthResetAt: now },
-      });
-      user.analysesThisMonth = 0;
-    }
-
-    const limits: Record<string, number> = { FREE: 3, PRO: 50, TEAM: 999 };
-    const limit = limits[user.plan] ?? 3;
-
-    if (user.analysesThisMonth >= limit) {
-      throw new ConflictException(
-        `Monthly limit reached (${limit} analyses for ${user.plan} plan). Upgrade to get more.`,
-      );
-    }
-  }
-
-  async incrementAnalysisCount(userId: string) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { analysesThisMonth: { increment: 1 } },
-    });
   }
 }

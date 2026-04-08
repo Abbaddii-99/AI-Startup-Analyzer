@@ -1,7 +1,18 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AnalysisService } from './analysis.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AIService } from '../agents/ai.service';
+
+function sanitizeIdea(idea: string): string {
+  return idea
+    .trim()
+    .slice(0, 2000)
+    .replace(/[<>"'`]/g, '')
+    .replace(/ignore\s+(previous|above|all)\s+instructions?/gi, '')
+    .replace(/system\s*:/gi, '')
+    .replace(/\\n|\\r/g, ' ');
+}
 
 @Controller('analysis')
 @UseGuards(JwtAuthGuard)
@@ -24,6 +35,7 @@ export class AnalysisController {
   }
 
   @Post('chat')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   async chat(@Request() req, @Body() body: { message: string; context: string; analysisId?: string }): Promise<any> {
     if (!body.message?.trim()) throw new BadRequestException('Message is required');
 
@@ -33,8 +45,9 @@ export class AnalysisController {
       if (!analysis) throw new BadRequestException('Analysis not found');
     }
 
+    // Apply the same sanitization as the queue processor
     const safeContext = String(body.context ?? '').slice(0, 3000).replace(/[<>]/g, '');
-    const safeMessage = body.message.trim().slice(0, 500);
+    const safeMessage = sanitizeIdea(body.message.trim().slice(0, 500));
     const prompt = `You are a startup analyst assistant. Based on this analysis report:\n\n${safeContext}\n\nAnswer this question concisely: ${safeMessage}`;
     const reply = await this.aiService.generate(prompt);
     return { reply };
@@ -47,8 +60,12 @@ export class AnalysisController {
   }
 
   @Get()
-  async getAll(@Request() req): Promise<any[]> {
-    return this.analysisService.getUserAnalyses(req.user.userId);
+  async getAll(@Request() req, @Query('skip') skip?: string, @Query('take') take?: string): Promise<any[]> {
+    return this.analysisService.getUserAnalyses(
+      req.user.userId,
+      skip ? parseInt(skip, 10) : 0,
+      take ? Math.min(parseInt(take, 10), 50) : 20,
+    );
   }
 
   @Get(':id')
