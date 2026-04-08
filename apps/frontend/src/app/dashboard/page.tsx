@@ -8,8 +8,18 @@ import { Navbar } from '@/components/Navbar'
 import { PlanBadge, scoreColor } from '@/components/ScoreCard'
 import { Sparkles, TrendingUp, Clock, CheckCircle, XCircle, Trash2, RefreshCw, MoreVertical } from 'lucide-react'
 
+interface AnalysisSummary {
+  id: string
+  idea: string
+  status: string
+  overallScore?: number
+  marketDemandScore?: number
+  profitPotentialScore?: number
+  createdAt: string
+}
+
 export default function DashboardPage() {
-  const [analyses, setAnalyses] = useState<any[]>([])
+  const [analyses, setAnalyses] = useState<AnalysisSummary[]>([])
   const [planInfo, setPlanInfo] = useState<{ plan: string; used: number; limit: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
@@ -41,7 +51,9 @@ export default function DashboardPage() {
     try {
       await api.delete(`/analysis/${id}`)
       setAnalyses(prev => prev.filter(a => a.id !== id))
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      alert(`Failed to delete: ${err.message || 'Unknown error'}`)
+    }
     setDeleting(null)
     setMenuOpen(null)
   }
@@ -53,7 +65,9 @@ export default function DashboardPage() {
       await api.post(`/analysis/${id}/retry`)
       setAnalyses(prev => prev.map(a => a.id === id ? { ...a, status: 'PROCESSING' } : a))
       setTimeout(() => router.push(`/analysis/${id}`), 500)
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      alert(`Failed to retry: ${err.message || 'Unknown error'}`)
+    }
     setRetrying(null)
     setMenuOpen(null)
   }
