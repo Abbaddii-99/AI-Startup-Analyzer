@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AgentInterface } from './agent.interface';
+import { Agent } from './agent.interface';
 import { AIService } from './ai.service';
 
 @Injectable()
-export class IdeaAnalyzerAgent implements AgentInterface {
+export class IdeaAnalyzerAgent implements Agent<any> {
   constructor(
     private readonly aiService: AIService,
   ) {}

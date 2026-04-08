@@ -1,3 +1,7 @@
+import { Logger } from '@nestjs/common';
+
+const logger = new Logger('AIEvent');
+
 export interface AIEvent {
   stage: 'decision' | 'grounding' | 'effectiveness' | string;
   type: 'applied' | 'skipped' | 'ai_used' | 'rule_used' | 'limit_reached' | string;
@@ -13,5 +17,5 @@ export interface AIEvent {
 }
 
 export function logAIEvent(event: AIEvent): void {
-  console.log(JSON.stringify(event));
+  logger.debug(`[${event.stage}] ${event.type}: ${event.reason ?? ''} ${JSON.stringify(event)}`);
 }

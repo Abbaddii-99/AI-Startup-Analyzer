@@ -14,44 +14,29 @@ import { BusinessModelAgent } from './business-model.agent';
 import { VisionMissionAgent } from './vision-mission.agent';
 import { BrandIdentityAgent } from './brand-identity.agent';
 import { BudgetEstimatorAgent } from './budget-estimator.agent';
-import { FinancialPlanAgent } from './financial-plan.agent';
+
+// Single source of truth — all agents are both provided and exported
+const AGENTS = [
+  AIService,
+  IdeaAnalyzerAgent,
+  ComprehensiveIdeaAnalyzerAgent,
+  MarketResearchAgent,
+  CompetitorAnalysisAgent,
+  MVPGeneratorAgent,
+  MonetizationAgent,
+  GoToMarketAgent,
+  FinalReportAgent,
+  RiskRadarAgent,
+  RoadmapAgent,
+  BusinessModelAgent,
+  VisionMissionAgent,
+  BrandIdentityAgent,
+  BudgetEstimatorAgent,
+  // FinancialPlanAgent — add back when integrated into the pipeline
+];
 
 @Module({
-  providers: [
-    AIService,
-    IdeaAnalyzerAgent,
-    ComprehensiveIdeaAnalyzerAgent,
-    MarketResearchAgent,
-    CompetitorAnalysisAgent,
-    MVPGeneratorAgent,
-    MonetizationAgent,
-    GoToMarketAgent,
-    FinalReportAgent,
-    RiskRadarAgent,
-    RoadmapAgent,
-    BusinessModelAgent,
-    VisionMissionAgent,
-    BrandIdentityAgent,
-    BudgetEstimatorAgent,
-    FinancialPlanAgent,
-  ],
-  exports: [
-    AIService,
-    IdeaAnalyzerAgent,
-    ComprehensiveIdeaAnalyzerAgent,
-    MarketResearchAgent,
-    CompetitorAnalysisAgent,
-    MVPGeneratorAgent,
-    MonetizationAgent,
-    GoToMarketAgent,
-    FinalReportAgent,
-    RiskRadarAgent,
-    RoadmapAgent,
-    BusinessModelAgent,
-    VisionMissionAgent,
-    BrandIdentityAgent,
-    BudgetEstimatorAgent,
-    FinancialPlanAgent,
-  ],
+  providers: AGENTS,
+  exports: AGENTS,
 })
 export class AgentsModule {}
