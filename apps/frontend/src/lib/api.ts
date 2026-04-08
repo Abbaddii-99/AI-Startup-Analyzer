@@ -3,10 +3,13 @@ import type { AnalysisResult, IdeaAnalysis } from '@ai-analyzer/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-const api = axios.create({ baseURL: API_URL });
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true, // Send httpOnly cookies with every request
+});
 
+// Fallback: if bearer token exists in localStorage, add it (for backwards compat during transition)
 api.interceptors.request.use((config) => {
-  // Try zustand store first, fallback to localStorage
   let token: string | null = null;
   try {
     const stored = localStorage.getItem('auth-storage');
@@ -20,18 +23,11 @@ api.interceptors.request.use((config) => {
 export default api;
 
 export const getAnalysis = async (id: string): Promise<AnalysisResult> => {
-  const response = await fetch(`/api/analysis/${id}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch analysis');
-  }
-  const data = await response.json();
+  const { data } = await api.get(`/analysis/${id}`);
   return data as AnalysisResult;
 };
 
 export const getIdeaAnalysis = async (id: string): Promise<IdeaAnalysis | null> => {
-  const response = await fetch(`/api/analysis/${id}/idea-analysis`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch idea analysis');
-  }
-  return response.json() as Promise<IdeaAnalysis | null>;
+  const { data } = await api.get(`/analysis/${id}/idea-analysis`);
+  return data as IdeaAnalysis | null;
 };

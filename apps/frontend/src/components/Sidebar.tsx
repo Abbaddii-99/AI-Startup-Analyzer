@@ -55,6 +55,7 @@ export default function Sidebar({ analysis, activeSection, onSectionClick, onCha
       try { await api.post('/auth/logout', { refreshToken }) } catch {}
     }
     storeLogout()
+    // Clear any leftover localStorage tokens (backwards compat)
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     router.push('/auth/login')
