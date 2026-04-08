@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
 import { RegisterDto, LoginDto, RefreshDto } from './auth.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,14 +17,34 @@ export class AuthController {
 
   @Post('register')
   @Throttle({ short: { ttl: 60000, limit: 5 }, long: { ttl: 3600000, limit: 20 } })
-  async register(@Body() body: RegisterDto) {
-    return this.authService.register(body.email, body.password, body.name);
+  async register(@Body() body: RegisterDto, @Res() res: any) {
+    const result = await this.authService.register(body.email, body.password, body.name);
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    return res.json({ user: result.user });
   }
 
   @Post('login')
   @Throttle({ short: { ttl: 60000, limit: 10 }, long: { ttl: 3600000, limit: 50 } })
-  async login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+  async login(@Body() body: LoginDto, @Res() res: any) {
+    const result = await this.authService.login(body.email, body.password);
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    return res.json({ user: result.user });
+  }
+
+  private setAuthCookies(res: any, accessToken: string, refreshToken: string) {
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'strict' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
   }
 
   @Post('refresh')
@@ -66,5 +87,11 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     res.redirect(`${frontendUrl}/auth/callback`);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async me(@Req() req: any) {
+    return { user: { id: req.user.userId, email: req.user.email } };
   }
 }

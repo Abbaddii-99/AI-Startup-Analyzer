@@ -20,8 +20,11 @@ export function Navbar({ variant = 'dashboard', onBack, rightSlot }: NavbarProps
       try { await api.post('/auth/logout', { refreshToken }) } catch {}
     }
     storeLogout()
+    // Clear any leftover localStorage tokens (backwards compat)
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
+    // Clear cookies by calling the backend logout endpoint
+    // Then navigate to login
     router.push('/auth/login')
   }
 

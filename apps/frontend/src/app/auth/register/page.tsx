@@ -32,9 +32,8 @@ export default function RegisterPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Registration failed')
 
-      localStorage.setItem('token', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
-      setAuth(data.accessToken, data.refreshToken, data.user)
+      // Tokens are now delivered via httpOnly cookies — no localStorage needed
+      setAuth('', '', data.user)
       router.push('/')
     } catch (err: any) {
       setError(err.message)
