@@ -90,6 +90,7 @@ export class AnalysisService {
         user: { connect: { id: userId } },
         idea,
         status: 'PENDING',
+        content: '',
       },
     });
 
@@ -209,7 +210,7 @@ export class AnalysisService {
     };
 
     const result = await agentMap[field]();
-    await prisma.analysis.update({ where: { id }, data: { [field]: result } });
+    await prisma.analysis.update({ where: { id }, data: { [field]: JSON.stringify(result) } });
     return { [field]: result };
   }
 }
