@@ -38,13 +38,15 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile || pnpm install
+        run: |
+          pnpm store prune 2>/dev/null || true
+          pnpm install
 
       - name: Lint
         run: pnpm lint
 
       - name: Setup database
-        run: pnpm --filter @ai-analyzer/db run push
+        run: pnpm --filter @ai-analyzer/db exec prisma db push
         env:
           DATABASE_URL: file:./prisma/dev.db
 
