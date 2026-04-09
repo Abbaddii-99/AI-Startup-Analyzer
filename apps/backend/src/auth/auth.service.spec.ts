@@ -51,7 +51,7 @@ describe('AuthService smoke', () => {
     });
     prismaMock.refreshToken.create.mockResolvedValueOnce({ id: 'rt-1' });
 
-    const result = await service.register('user@example.com', 'password123', 'User');
+    const result = await service.register('user@example.com', 'SecurePass1!', 'User');
 
     expect(result.user.email).toBe('user@example.com');
     expect(result.accessToken).toBe('access-token');
@@ -63,13 +63,13 @@ describe('AuthService smoke', () => {
   it('blocks register if email already exists', async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ id: 'existing-user' });
 
-    await expect(service.register('user@example.com', 'password123')).rejects.toBeInstanceOf(
+    await expect(service.register('user@example.com', 'SecurePass1!')).rejects.toBeInstanceOf(
       ConflictException,
     );
   });
 
   it('logs in with valid credentials and returns tokens', async () => {
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const hashedPassword = await bcrypt.hash('SecurePass1!', 10);
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id: 'user-1',
       email: 'user@example.com',
@@ -79,7 +79,7 @@ describe('AuthService smoke', () => {
     });
     prismaMock.refreshToken.create.mockResolvedValueOnce({ id: 'rt-1' });
 
-    const result = await service.login('user@example.com', 'password123');
+    const result = await service.login('user@example.com', 'SecurePass1!');
 
     expect(result.user.id).toBe('user-1');
     expect(result.accessToken).toBe('access-token');
@@ -87,7 +87,7 @@ describe('AuthService smoke', () => {
   });
 
   it('rejects login with wrong password', async () => {
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const hashedPassword = await bcrypt.hash('SecurePass1!', 10);
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id: 'user-1',
       email: 'user@example.com',
@@ -96,7 +96,7 @@ describe('AuthService smoke', () => {
       password: hashedPassword,
     });
 
-    await expect(service.login('user@example.com', 'wrong-pass')).rejects.toBeInstanceOf(
+    await expect(service.login('user@example.com', 'wrong-Pass1!')).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
   });
