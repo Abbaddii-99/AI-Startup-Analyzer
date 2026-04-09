@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { AgentsModule } from './agents/agents.module';
 import { HealthController } from './common/health.controller';
+import { CsrfMiddleware } from './common/csrf.middleware';
 
 @Module({
   imports: [
@@ -35,4 +36,10 @@ import { HealthController } from './common/health.controller';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CsrfMiddleware)
+      .forRoutes('analysis');
+  }
+}

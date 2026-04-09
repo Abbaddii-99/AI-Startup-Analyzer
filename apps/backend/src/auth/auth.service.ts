@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from '../prisma';
@@ -35,7 +35,7 @@ export class AuthService {
   async register(email: string, password: string, name?: string) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new ConflictException('Email already in use');
-    if (password.length < 8) throw new ConflictException('Password must be at least 8 characters');
+    this.validatePasswordStrength(password);
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({ data: { email, password: hashedPassword, name } });
@@ -47,6 +47,25 @@ export class AuthService {
 
     this.logger.log(`New user registered: ${user.id}`);
     return { user: this.userResponse(user), accessToken, refreshToken };
+  }
+
+  /** Enforce password complexity requirements */
+  private validatePasswordStrength(password: string): void {
+    if (password.length < 10) {
+      throw new BadRequestException('Password must be at least 10 characters long');
+    }
+    if (!/[a-z]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one lowercase letter');
+    }
+    if (!/[A-Z]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one uppercase letter');
+    }
+    if (!/\d/.test(password)) {
+      throw new BadRequestException('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?/]/.test(password)) {
+      throw new BadRequestException('Password must contain at least one special character');
+    }
   }
 
   async login(email: string, password: string) {
