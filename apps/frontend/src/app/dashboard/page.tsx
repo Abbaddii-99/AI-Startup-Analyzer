@@ -126,12 +126,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Scores */}
-                {a.status === 'COMPLETED' && a.overallScore && (
+                {a.status === 'COMPLETED' && a.overallScore != null && a.marketDemandScore != null && a.profitPotentialScore != null && (
                   <div className="hidden md:flex items-center gap-4 text-sm shrink-0">
-                    <span className="text-gray-400">Market: <span className={`font-bold ${scoreColor(a.marketDemandScore)}`}>{a.marketDemandScore}</span></span>
-                    <span className="text-gray-400">Profit: <span className={`font-bold ${scoreColor(a.profitPotentialScore)}`}>{a.profitPotentialScore}</span></span>
+                    <span className="text-gray-400">Market: <span className={`font-bold ${scoreColor(a.marketDemandScore!)}`}>{a.marketDemandScore}</span></span>
+                    <span className="text-gray-400">Profit: <span className={`font-bold ${scoreColor(a.profitPotentialScore!)}`}>{a.profitPotentialScore}</span></span>
                     <div className="text-center">
-                      <div className={`text-2xl font-bold ${scoreColor(a.overallScore)}`}>{a.overallScore}</div>
+                      <div className={`text-2xl font-bold ${scoreColor(a.overallScore!)}`}>{a.overallScore}</div>
                       <div className="text-xs text-gray-400">/ 10</div>
                     </div>
                     <TrendingUp className="w-5 h-5 text-gray-300" />
