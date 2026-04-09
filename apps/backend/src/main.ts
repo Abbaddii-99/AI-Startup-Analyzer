@@ -2,9 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Security headers (CSP, X-Frame-Options, HSTS, etc.)
+  app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    crossOriginEmbedderPolicy: false,
+  }));
+
+  // Parse cookies for httpOnly cookie-based auth
+  app.use(cookieParser());
 
   const isProd = process.env.NODE_ENV === 'production';
   const allowedOrigins = isProd
@@ -14,6 +25,7 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
+    exposedHeaders: ['Set-Cookie', 'X-CSRF-Token'],
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

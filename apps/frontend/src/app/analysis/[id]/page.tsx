@@ -81,6 +81,9 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (!token) { router.push('/auth/login'); return }
 
+    // Fetch CSRF token on mount for state-changing requests
+    api.get('/analysis/csrf-token').catch(() => {});
+
     let cancelled = false
     let pollDelay = 2000
 

@@ -1,5 +1,7 @@
-import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Request, BadRequestException, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
+import { randomBytes } from 'crypto';
 import { AnalysisService } from './analysis.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AIService } from '../agents/ai.service';
@@ -21,6 +23,18 @@ export class AnalysisController {
     private analysisService: AnalysisService,
     private aiService: AIService,
   ) {}
+
+  /** Return a CSRF token for the Double Submit Cookie pattern */
+  @Get('csrf-token')
+  csrfToken(@Request() req: any, @Res() res: Response) {
+    const token = randomBytes(32).toString('hex');
+    res.cookie('XSRF-TOKEN', token, {
+      httpOnly: false, // Must be readable by JS to set in header
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    return res.json({ csrfToken: token });
+  }
 
   @Post()
   async create(@Request() req, @Body('idea') idea: string): Promise<any> {
