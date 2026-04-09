@@ -13,12 +13,5 @@
   },
   "rules": {
     "no-unused-vars": "warn"
-  },
-  "ignores": [
-    ".next/**",
-    "node_modules/**",
-    ".turbo/**",
-    "dist/**",
-    "coverage/**"
-  ]
+  }
 }
