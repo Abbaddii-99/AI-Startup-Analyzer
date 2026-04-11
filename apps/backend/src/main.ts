@@ -10,7 +10,6 @@ async function bootstrap() {
 
   // Security headers (CSP, X-Frame-Options, HSTS, etc.)
   app.use(helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
     crossOriginEmbedderPolicy: false,
   }));
 
