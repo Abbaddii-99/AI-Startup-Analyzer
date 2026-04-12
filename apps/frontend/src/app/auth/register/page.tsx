@@ -27,6 +27,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
+        credentials: 'include',
       })
 
       const data = await res.json()
@@ -82,7 +83,7 @@ export default function RegisterPage() {
               <label className="text-sm font-medium text-gray-700 mb-1 block">Password</label>
               <input
                 type="password"
-                placeholder="Min 8 characters"
+                placeholder="Min 10 chars: uppercase, lowercase, number, special char"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"

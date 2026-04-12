@@ -44,5 +44,14 @@
       "tmp": "^0.2.4",
       "webpack@^5.0.0": "^5.104.0"
     }
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.2",
+    "@prisma/adapter-better-sqlite3": "6.19.3",
+    "@prisma/adapter-libsql": "^7.7.0",
+    "@sqlite.org/sqlite-wasm": "3.51.2-build8",
+    "better-sqlite3": "^12.8.0",
+    "sql.js": "^1.14.1",
+    "sqlite3": "^6.0.1"
   }
 }
