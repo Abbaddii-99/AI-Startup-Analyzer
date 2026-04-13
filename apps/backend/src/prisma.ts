@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaLibSql } = require('@prisma/adapter-libsql');
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
@@ -8,7 +10,6 @@ let client: PrismaClient;
 
 if (process.platform === 'android') {
   // Android: use WASM-based libsql adapter
-  const { PrismaLibSql } = require('@prisma/adapter-libsql');
   const dbPath = path.resolve(process.cwd(), '../../packages/db/prisma/dev.db');
   const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
   client = new PrismaClient({
