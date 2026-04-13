@@ -3,11 +3,11 @@ import * as path from 'path';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
-// On Android (Termux): use WASM-based libsql adapter (no native modules)
-// On Linux/macOS/Windows: use standard Prisma with native query engine
+// Resolve database path - works for both Android (Termux) and Linux (Codespaces/Render)
 let client: PrismaClient;
 
 if (process.platform === 'android') {
+  // Android: use WASM-based libsql adapter
   const { PrismaLibSql } = require('@prisma/adapter-libsql');
   const dbPath = path.resolve(process.cwd(), '../../packages/db/prisma/dev.db');
   const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
@@ -16,13 +16,11 @@ if (process.platform === 'android') {
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 } else {
+  // Linux/macOS/Windows: use native Prisma
+  const dbPath = process.env.DATABASE_URL || `file:${path.resolve(process.cwd(), '../../packages/db/prisma/dev.db')}`;
   client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
+    datasources: { db: { url: dbPath } },
   });
 }
 
