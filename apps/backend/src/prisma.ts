@@ -5,18 +5,18 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefi
 
 // On Android (Termux): use WASM-based libsql adapter (no native modules)
 // On Linux/macOS/Windows: use standard Prisma with native query engine
-let prisma: PrismaClient;
+let client: PrismaClient;
 
 if (process.platform === 'android') {
   const { PrismaLibSql } = require('@prisma/adapter-libsql');
   const dbPath = path.resolve(process.cwd(), '../../packages/db/prisma/dev.db');
   const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
-  prisma = new PrismaClient({
+  client = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 } else {
-  prisma = new PrismaClient({
+  client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     datasources: {
       db: {
@@ -26,6 +26,6 @@ if (process.platform === 'android') {
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? prisma;
+export const prisma = globalForPrisma.prisma ?? client;
 
 globalForPrisma.prisma = prisma;
