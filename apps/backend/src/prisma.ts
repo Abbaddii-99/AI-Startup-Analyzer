@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { PrismaLibSql } = require('@prisma/adapter-libsql');
+/* eslint-enable @typescript-eslint/no-var-requires */
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
