@@ -1,9 +1,10 @@
 import axios from 'axios';
 import type { AnalysisResult, IdeaAnalysis } from '@ai-analyzer/shared';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
+  baseURL: API_URL || undefined,
   baseURL: API_URL,
   withCredentials: true, // Send httpOnly cookies with every request
 });
