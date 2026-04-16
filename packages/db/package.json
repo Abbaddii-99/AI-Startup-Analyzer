@@ -5,14 +5,13 @@
   "types": "./index.ts",
   "scripts": {
     "generate": "prisma generate",
-    "migrate": "dotenv -e ../../.env -- prisma migrate deploy",
-    "studio": "prisma studio",
-    "push": "prisma db push"
+    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+    "studio": "dotenv -e ../../.env -- prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
-    "dotenv": "^16.4.1",
-    "sqlite3": "^6.0.1"
+    "dotenv": "^16.4.1"
   },
   "devDependencies": {
     "dotenv-cli": "^7.3.0",
