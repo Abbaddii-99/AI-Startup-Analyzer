@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider  = "sqlite"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_DATABASE_URL")
 }
@@ -83,4 +83,3 @@ model Analysis {
   @@index([status])
   @@index([isPublic])
 }
-
