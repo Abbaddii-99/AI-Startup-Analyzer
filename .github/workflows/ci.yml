@@ -49,6 +49,7 @@ jobs:
         run: pnpm --filter @ai-analyzer/db exec prisma db push
         env:
           DATABASE_URL: file:./prisma/dev.db
+          DIRECT_DATABASE_URL: file:./prisma/dev.db
 
       - name: Build
         run: pnpm build
